@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.pyc
+
+# Node/React/Next.js
+FRONTEND/node_modules/
+FRONTEND/.cache/
+FRONTEND/build/
+FRONTEND/dist/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Autres caches
+*.log

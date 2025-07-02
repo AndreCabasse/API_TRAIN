@@ -1,0 +1,10 @@
+# requirements.txt
+fastapi
+uvicorn[standard]
+pydantic
+pandas
+python-multipart
+
+# Ajoute d'autres dépendances si besoin :
+# par exemple, si tu utilises zoneinfo (Python < 3.9) :
+# backports.zoneinfo
