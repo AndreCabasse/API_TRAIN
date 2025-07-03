@@ -22,7 +22,7 @@ import {
   Checkbox,
   Grid,
   Typography,
-  Toolbar,
+  //Toolbar,
   Box,
   Chip,
   IconButton,
@@ -340,6 +340,14 @@ const TrainManagement: React.FC = () => {
               </Button>
             </Box>
           </Box>
+
+          {loading && (
+            <Box display="flex" justifyContent="center" alignItems="center" my={2}>
+              <Typography color={redPalette.main} fontWeight="bold">
+                {t('loading', language) || 'Chargement...'}
+              </Typography>
+            </Box>
+          )}
 
           <TableContainer component={Paper} sx={{
             borderRadius: 3,

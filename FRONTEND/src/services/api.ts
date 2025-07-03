@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Train, TrainFormData, Statistics, Requirements } from '../types';
+import { Train, TrainFormData, Statistics} from '../types';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
