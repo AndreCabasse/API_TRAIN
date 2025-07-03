@@ -32,8 +32,9 @@ app.add_middleware(
         "https://web-production-76c6f.up.railway.app"
     ],
     allow_credentials=True,
-    allow_methods=["*"],  # ou ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
-    allow_headers=["*"],
+    allow_methods=["*"],
+    allow_headers=["*", "Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With"],
+    expose_headers=["*", "Authorization", "Content-Type"],
 )
 app.include_router(auth.router)
 
