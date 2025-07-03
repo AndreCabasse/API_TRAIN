@@ -36,6 +36,15 @@ app.add_middleware(
     allow_headers=["*", "Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With"],
     expose_headers=["*", "Authorization", "Content-Type"],
 )
+
+# Handler global pour toutes les requêtes OPTIONS (préflight CORS)
+from fastapi import Request
+from fastapi.responses import Response
+
+@app.options("/{rest_of_path:path}")
+async def preflight_handler(rest_of_path: str, request: Request):
+    return Response(status_code=204)
+
 app.include_router(auth.router)
 
 simulation = Simulation()
