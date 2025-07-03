@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Container, Grid, Toolbar, Typography, Box, FormControl, InputLabel, Select, MenuItem, CircularProgress, Paper, Stack, Chip, Button, Tooltip, TextField
+  Container, Grid, Typography, Box, FormControl, InputLabel, Select, MenuItem, CircularProgress, Paper, Stack, Chip, Button, Tooltip, TextField
 } from '@mui/material';
 import TrackIcon from '@mui/icons-material/Train';
 import DirectionsRailwayIcon from '@mui/icons-material/DirectionsRailway';
@@ -10,7 +10,7 @@ import { Timeline, TimelineItem, TimelineSeparator, TimelineConnector, TimelineC
 import { useLanguage } from '../contexts/LanguageContext';
 import { t } from '../utils/translations';
 import { trainApi } from '../services/api';
-import RequirementsChart from "./RequirementsChart";
+// import RequirementsChart from "./RequirementsChart";
 import { Train } from '../types';
 import Plot from "react-plotly.js";
 import dayjs from 'dayjs';
