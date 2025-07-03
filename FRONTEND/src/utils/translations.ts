@@ -263,7 +263,7 @@ export const TRANSLATIONS = {
         "wagon_type_2": {"fr": "Wagon 2","en": "Coach 2","da": "Vogn 2"},
         "wagon_type_3": {"fr": "Wagon 3","en": "Coach 3","da": "Vogn 3"},
         "wagon_type_4": {"fr": "Wagon 4","en": "Coach 4","da": "Vogn 4"},
-        "welcome_title": {"fr": "Bienvenue sur la plateforme DSB","en": "Welcome to the DSB platform","da": "Velkommen til DSB-platformen"},
+        "welcome_title": {"fr": "Bienvenue sur la plateforme de Puzzling de la DSB","en": "Welcome to the DSB platform","da": "Velkommen til DSB-platformen"},
         "login_tab": {"fr": "Connexion","en": "Login","da": "Log ind"},
         "register_tab": {"fr": "Inscription","en": "Register","da": "Opret bruger"},
         "username": {"fr": "Nom d'utilisateur","en": "Username","da": "Brugernavn"},
