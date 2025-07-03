@@ -83,10 +83,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         raise HTTPException(status_code=401, detail="Invalid token")
 
 
-# Handler pour le préflight CORS (OPTIONS) sur /register
-@router.options("/register")
-def options_register():
-    return Response(status_code=204)
+
 
 @router.post("/register")
 def register(user: UserIn):

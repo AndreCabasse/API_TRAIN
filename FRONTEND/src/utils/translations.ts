@@ -190,6 +190,8 @@ export const TRANSLATIONS = {
         "wagon_type_to_add" : {"fr": "Type de wagon à ajouter (longueur 14m).", "en": "Type of coach to be added (length 14m).", "da": "Type vogn, der skal tilføjes (længde 14m)."},
         "track_choice_locomotive" : {"fr": "Choisissez la voie sur laquelle ajouter la locomotive.", "en": "Choose the track on which to add the locomotive.", "da": "Vælg det spor, hvor lokomotivet skal tilføjes."},
         "recenter_map": {"fr": "🔄 Recentrer la carte","en": "🔄 Recenter map","da": "🔄 Centrer kortet"},
+        "overview": {"fr": "Vue d'ensemble","en": "Overview","da": "Oversigt"},
+        "total_trains": {"fr": "Nombre total de trains","en": "Total number of trains","da": "Samlet antal tog"},
         "show_clusters": {"fr": "Afficher les clusters de trains","en": "Show train clusters","da": "Vis togklynger"},
         "loading_map": {"fr": "Chargement de la carte...","en": "Loading map...","da": "Indlæser kort..."},
         "no_depot_coords": {"fr": "Aucun dépôt géolocalisé à afficher.","en": "No geolocated depot to display.","da": "Ingen geolokaliseret depot at vise."},

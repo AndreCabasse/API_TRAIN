@@ -222,7 +222,9 @@ const TrainManagement: React.FC = () => {
       const formData = new FormData();
       formData.append('file', e.target.files[0]);
       try {
-        const res = await fetch('http://localhost:8000/import-trains-excel', {
+        // Utilise l'URL d'API du backend (compatible local et prod)
+        const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+        const res = await fetch(`${apiUrl}/import-trains-excel`, {
           method: 'POST',
           body: formData,
         });
