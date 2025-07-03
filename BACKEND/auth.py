@@ -6,6 +6,7 @@ from jose import jwt, JWTError
 from datetime import datetime, timedelta
 from sqlmodel import SQLModel, Field, Session, create_engine, select
 from sqlalchemy import Column, JSON
+from fastapi.responses import Response
 
 DATABASE_URL = "sqlite:///./users.db"
 engine = create_engine(DATABASE_URL, echo=False)
@@ -85,7 +86,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
 # Handler pour le préflight CORS (OPTIONS) sur /register
 @router.options("/register")
 def options_register():
-    return {}
+    return Response(status_code=204)
 
 @router.post("/register")
 def register(user: UserIn):
