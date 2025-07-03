@@ -7,7 +7,7 @@ import {
   Tooltip,
   Box,
   Typography,
-  useTheme,
+  //useTheme,
 } from "@mui/material";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import TrainIcon from "@mui/icons-material/Train";
@@ -38,7 +38,7 @@ interface SideNavProps {
 
 const SideNav: React.FC<SideNavProps> = ({ activeTab, onTabChange }) => {
   const { language } = useLanguage();
-  const theme = useTheme();
+  //const theme = useTheme();
 
   return (
     <Drawer
