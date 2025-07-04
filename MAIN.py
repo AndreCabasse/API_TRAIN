@@ -5,7 +5,8 @@ Created on Wed Jun 25 09:51:02 2025
 @author: andre
 """
 
-from fastapi import FastAPI, HTTPException, UploadFile, Body, File
+from fastapi import FastAPI, HTTPException, UploadFile, Body, File, Request
+from fastapi.responses import Response 
 from fastapi.middleware.cors import CORSMiddleware
 from BACKEND.Simulation_Core import Simulation, Train
 from BACKEND.Carte_Core import get_depots_list, get_depot_center
@@ -37,13 +38,23 @@ app.add_middleware(
     expose_headers=["*", "Authorization", "Content-Type"],
 )
 
+
 # Handler global pour toutes les requêtes OPTIONS (préflight CORS)
 from fastapi import Request
 from fastapi.responses import Response
 
+# Ce handler répond à toutes les requêtes OPTIONS pour le CORS (préflight)
 @app.options("/{rest_of_path:path}")
 async def preflight_handler(rest_of_path: str, request: Request):
-    return Response(status_code=204)
+    # Ajoute les bons headers CORS pour la réponse préflight
+    headers = {
+        "Access-Control-Allow-Origin": request.headers.get("origin", "*"),
+        "Access-Control-Allow-Methods": "*",
+        "Access-Control-Allow-Headers": request.headers.get("access-control-request-headers", "*"),
+        "Access-Control-Allow-Credentials": "true",
+        "Access-Control-Expose-Headers": "*, Authorization, Content-Type"
+    }
+    return Response(status_code=200, headers=headers)
 
 app.include_router(auth.router)
 
