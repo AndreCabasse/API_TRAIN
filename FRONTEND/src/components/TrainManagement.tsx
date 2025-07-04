@@ -213,7 +213,16 @@ const TrainManagement: React.FC = () => {
       setTrains(updatedTrains);
       await saveCurrentSimulation(updatedTrains);
     } catch (error: any) {
-      showSnackbar('Erreur lors de la sauvegarde', 'error');
+      if (error && error.isDepotConflict && error.depots_disponibles) {
+        // Message personnalisé avec la liste des dépôts disponibles
+        showSnackbar(
+          `${t('no_track_available', language)} ${formData.depot}.\n` +
+          `${t('suggested_depots', language)}: ${error.depots_disponibles.join(', ')}`,
+          'error'
+        );
+      } else {
+        showSnackbar('Erreur lors de la sauvegarde', 'error');
+      }
     }
   };
 

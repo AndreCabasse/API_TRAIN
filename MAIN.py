@@ -6,7 +6,7 @@ Created on Wed Jun 25 09:51:02 2025
 """
 
 from fastapi import FastAPI, HTTPException, UploadFile, Body, File, Request
-from fastapi.responses import Response 
+from fastapi.responses import Response, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from BACKEND.Simulation_Core import Simulation, Train
 from BACKEND.Carte_Core import get_depots_list, get_depot_center
@@ -23,6 +23,23 @@ from BACKEND import auth
 
 
 app = FastAPI(title="Train Depot Simulation API", version="1.0.0")
+
+# --- Unified error response helper ---
+def error_response(message: str, status_code: int = 400, details: dict = None):
+    content = {"success": False, "error": message}
+    if details:
+        content["details"] = details
+    return JSONResponse(status_code=status_code, content=content)
+
+# --- Global exception handler for unexpected errors ---
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    import traceback
+    return error_response(
+        "Internal server error.",
+        status_code=500,
+        details={"exception": str(exc), "trace": traceback.format_exc()}
+    )
 
 # Configuration CORS
 app.add_middleware(
@@ -80,29 +97,42 @@ train_id_counter = 0
 
 @app.post("/trains")
 def add_train(train: TrainIn):
-    global train_id_counter
+    # Validation des champs obligatoires
+    required_fields = ["nom", "wagons", "locomotives", "arrivee", "depart", "depot"]
+    for field in required_fields:
+        if getattr(train, field, None) in [None, ""]:
+            return error_response(f"Le champ '{field}' est requis.", 422)
+
+    # Validation des types et valeurs
+    if not isinstance(train.wagons, int) or train.wagons < 0:
+        return error_response("Le nombre de wagons doit être un entier positif.", 422)
+    if not isinstance(train.locomotives, int) or train.locomotives < 0:
+        return error_response("Le nombre de locomotives doit être un entier positif.", 422)
+
+    # Validation des dates
     arrivee = train.arrivee
     depart = train.depart
-
-    # Conversion explicite en Europe/Copenhagen
     cph = ZoneInfo("Europe/Copenhagen")
     if arrivee.tzinfo is None:
-        raise HTTPException(status_code=400, detail="Datetime must include timezone (Z or +00:00)")
+        return error_response("La date d'arrivée doit inclure le fuseau horaire (Z ou +00:00).", 422)
     arrivee = arrivee.astimezone(cph)
     if depart.tzinfo is None:
-        raise HTTPException(status_code=400, detail="Datetime must include timezone (Z or +00:00)")
+        return error_response("La date de départ doit inclure le fuseau horaire (Z ou +00:00).", 422)
     depart = depart.astimezone(cph)
-    
+    if arrivee >= depart:
+        return error_response("La date d'arrivée doit être antérieure à la date de départ.", 422)
+
     # Vérification de chevauchement pour le même nom de train
     for t in simulation.trains:
         if t.nom == train.nom:
             # Si les périodes se chevauchent
             if not (depart <= t.arrivee or arrivee >= t.depart):
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Train '{train.nom}' is already scheduled from {t.arrivee} to {t.depart} at {t.depot}."
+                return error_response(
+                    f"Le train '{train.nom}' est déjà planifié du {t.arrivee} au {t.depart} au dépôt {t.depot}.",
+                    409
                 )
 
+    global train_id_counter
     t_obj = Train(
         id=train_id_counter,
         nom=train.nom,
@@ -118,31 +148,66 @@ def add_train(train: TrainIn):
     train_id_counter += 1
     erreur = simulation.ajouter_train(t_obj, t_obj.depot)
     if erreur:
-        raise HTTPException(status_code=400, detail=erreur)
-    return vars(t_obj)
+        return error_response(erreur, 400)
+    return {"success": True, "train": vars(t_obj)}
 
 @app.put("/trains/{train_id}")
 def update_train(train_id: int, train: TrainIn):
+    # Validation des champs obligatoires
+    required_fields = ["nom", "wagons", "locomotives", "arrivee", "depart", "depot"]
+    for field in required_fields:
+        if getattr(train, field, None) in [None, ""]:
+            return error_response(f"Le champ '{field}' est requis.", 422)
+
+    # Validation des types et valeurs
+    if not isinstance(train.wagons, int) or train.wagons < 0:
+        return error_response("Le nombre de wagons doit être un entier positif.", 422)
+    if not isinstance(train.locomotives, int) or train.locomotives < 0:
+        return error_response("Le nombre de locomotives doit être un entier positif.", 422)
+
+    # Validation des dates
+    arrivee = train.arrivee
+    depart = train.depart
+    cph = ZoneInfo("Europe/Copenhagen")
+    if arrivee.tzinfo is None:
+        return error_response("La date d'arrivée doit inclure le fuseau horaire (Z ou +00:00).", 422)
+    arrivee = arrivee.astimezone(cph)
+    if depart.tzinfo is None:
+        return error_response("La date de départ doit inclure le fuseau horaire (Z ou +00:00).", 422)
+    depart = depart.astimezone(cph)
+    if arrivee >= depart:
+        return error_response("La date d'arrivée doit être antérieure à la date de départ.", 422)
+
     # Trouve le train existant
     existing_train = next((t for t in simulation.trains if t.id == train_id), None)
     if not existing_train:
-        raise HTTPException(status_code=404, detail="Train not found")
-    
+        return error_response("Train non trouvé.", 404)
+
+    # Vérification de chevauchement pour le même nom de train (hors ce train)
+    for t in simulation.trains:
+        if t.nom == train.nom and t.id != train_id:
+            if not (depart <= t.arrivee or arrivee >= t.depart):
+                return error_response(
+                    f"Le train '{train.nom}' est déjà planifié du {t.arrivee} au {t.depart} au dépôt {t.depot}.",
+                    409
+                )
+
     # Met à jour les propriétés
     existing_train.nom = train.nom
     existing_train.wagons = train.wagons
     existing_train.locomotives = train.locomotives
-    existing_train.arrivee = train.arrivee
-    existing_train.depart = train.depart
+    existing_train.arrivee = arrivee
+    existing_train.depart = depart
     existing_train.depot = train.depot
     existing_train.type = train.type
     existing_train.electrique = train.electrique
     existing_train.locomotive_cote = train.locomotive_cote
     existing_train.longueur = existing_train.calculer_longueur()
-    
     # Recalcule la simulation
-    simulation.recalculer()
-    return vars(existing_train)
+    erreur = simulation.recalculer() or None
+    if erreur:
+        return error_response(erreur, 400)
+    return {"success": True, "train": vars(existing_train)}
 
 @app.delete("/trains/{train_id}")
 def delete_train(train_id: int):

@@ -4,6 +4,7 @@ export const TRANSLATIONS = {
   "add_train": {"fr": "Ajouter un train", "en": "Add a train", "da": "Tilføj et tog"},
   "train_name": {"fr": "Nom du train", "en": "Train name", "da": "Tog navn"},
   "wagons": {"fr": "Nombre de wagons","en": "Number of wagons","da": "Antal vogne"},
+  "date": {"fr": "Date", "en": "Date", "da": "Dato"},
   "locomotives": {"fr": "Nombre de locomotives","en": "Number of locomotives","da": "Antal lokomotiver"},
   "length": {"fr": "Longueur (m)", "en": "Length (m)", "da": "Længde (m)"},
   "arrival_time": {"fr": "Heure d'arrivée", "en": "Arrival time", "da": "Ankomsttid"},
@@ -28,6 +29,7 @@ export const TRANSLATIONS = {
   "trains": {"fr": "Trains", "en": "Trains", "da": "Tog"},
   "statistics": {"fr": "Statistiques", "en": "Statistics", "da": "Statistikker"},
   "depots": {"fr": "Dépôts", "en": "Depots", "da": "Depoter"},
+  "depot": {"fr": "Dépôt", "en": "Depot", "da": "Depot"},
   "language": {"fr": "Langue", "en": "Language", "da": "Sprog"},
         "Time": {"fr": "Temps", "en": "Time", "da": "Tid"},
         "Track": {"fr": "Voie", "en": "Track", "da": "Togbane"},
@@ -220,6 +222,7 @@ export const TRANSLATIONS = {
         "number_of_waiting_trains": {"fr": "Trains en attente","en": "Waiting trains","da": "Ventende tog"},
         "depot_stats": {"fr": "Statistiques détaillées","en": "Detailed statistics","da": "Detaljeret statistik"},
         "depot_name": {"fr": "Dépôt","en": "Depot","da": "Depot"},
+        "element_removed_success": {"fr": "Élément supprimé avec succès.","en": "Element removed successfully.","da": "Element fjernet med succes."},
         "no_waiting_trains": {"fr": "Aucun train en attente","en": "No waiting trains","da": "Ingen ventende tog"},
         "no_gantt": {"fr": "Aucun Gantt à afficher","en": "No Gantt to display","da": "Ingen Gantt at vise"},
         "error_loading_gantt": {"fr": "Erreur lors du chargement du Gantt","en": "Error loading Gantt","da": "Fejl ved indlæsning af Gantt"},
@@ -291,9 +294,6 @@ export const TRANSLATIONS = {
         "date_and_time": { "fr": "Date et heure", "en": "Date and time", "da": "Dato og tid" },
         "wagon_add_error": {"fr": "Erreur lors de l'ajout du wagon","en": "Error adding wagon","da": "Fejl ved tilføjelse af vogn"},
         "locomotive_add_error": {"fr": "Erreur lors de l'ajout de la locomotive","en": "Error adding locomotive","da": "Fejl ved tilføjelse af lokomotiv"},
-          
-
-
 };
 
 export type Language = 'fr' | 'en' | 'da';

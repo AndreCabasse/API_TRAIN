@@ -20,7 +20,7 @@ import {
   //IconButton,
   CircularProgress
 } from '@mui/material';
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { useLanguage } from '../contexts/LanguageContext';
 import { t } from '../utils/translations';
 import { trainApi } from '../services/api';
@@ -32,6 +32,9 @@ import PercentIcon from '@mui/icons-material/Percent';
 // import InfoIcon from '@mui/icons-material/Info';
 import { Language } from '../types';
 import Chip from '@mui/material/Chip';
+
+import DirectionsRunIcon from '@mui/icons-material/DirectionsRun';
+import { Tooltip as MuiTooltip } from '@mui/material';
 
 // Palette de rouges nuancés
 const redPalette = {
@@ -48,7 +51,8 @@ const redPalette = {
 
 const COLORS = [redPalette.main, redPalette.light, '#FFBB28', '#FF8042', '#8884D8'];
 
-// ----------- Tableau détaillé Requirements By Day -----------
+
+
 const RequirementsByDayTable: React.FC<{ data: any[]; language: string }> = ({ data, language }) => (
   <TableContainer component={Paper} sx={{ mt: 3, mb: 3 }}>
     <Table>
@@ -65,51 +69,71 @@ const RequirementsByDayTable: React.FC<{ data: any[]; language: string }> = ({ d
           <TableRow key={row.date}>
             <TableCell>{row.date}</TableCell>
             <TableCell>
-              {row.test_drivers}
-              {row.depots_test_drivers && row.depots_test_drivers.length > 0 && (
-                <Box component="span" sx={{ ml: 1 }}>
-                  {row.depots_test_drivers.map((depot: string, idx: number) => (
-                    <Chip
-                      key={depot}
-                      label={depot}
-                      size="small"
-                      color="primary"
-                      sx={{ mr: 0.5, mb: 0.5, bgcolor: "#ffebee", color: "#b71c1c" }}
-                    />
-                  ))}
-                </Box>
-              )}
+              <Stack direction="row" alignItems="center" spacing={1}>
+                <DirectionsRunIcon sx={{ color: '#1976d2' }} fontSize="small" />
+                <b>{row.test_drivers}</b>
+                {row.depots_test_drivers && row.depots_test_drivers.length > 0 && (
+                  <MuiTooltip
+                    title={row.depots_test_drivers.join(', ')}
+                    arrow
+                  >
+                    <Box component="span" sx={{ ml: 1, display: 'flex', flexWrap: 'wrap' }}>
+                      {row.depots_test_drivers.map((depot: string, idx: number) => (
+                        <Chip
+                          key={depot}
+                          label={depot}
+                          size="small"
+                          sx={{ mr: 0.5, mb: 0.5, bgcolor: "#e3f2fd", color: "#1976d2", fontWeight: 600 }}
+                        />
+                      ))}
+                    </Box>
+                  </MuiTooltip>
+                )}
+              </Stack>
             </TableCell>
             <TableCell>
-              {row.locomotives}
-              {row.depots_locomotives && row.depots_locomotives.length > 0 && (
-                <Box component="span" sx={{ ml: 1 }}>
-                  {row.depots_locomotives.map((depot: string, idx: number) => (
-                    <Chip
-                      key={depot}
-                      label={depot}
-                      size="small"
-                      color="secondary"
-                      sx={{ mr: 0.5, mb: 0.5, bgcolor: "#e3f2fd", color: "#1976d2" }}
-                    />
-                  ))}
-                </Box>
-              )}
+              <Stack direction="row" alignItems="center" spacing={1}>
+                <TrainIcon sx={{ color: '#ff9800' }} fontSize="small" />
+                <b>{row.locomotives}</b>
+                {row.depots_locomotives && row.depots_locomotives.length > 0 && (
+                  <MuiTooltip
+                    title={row.depots_locomotives.join(', ')}
+                    arrow
+                  >
+                    <Box component="span" sx={{ ml: 1, display: 'flex', flexWrap: 'wrap' }}>
+                      {row.depots_locomotives.map((depot: string, idx: number) => (
+                        <Chip
+                          key={depot}
+                          label={depot}
+                          size="small"
+                          sx={{ mr: 0.5, mb: 0.5, bgcolor: "#fff3e0", color: "#ff9800", fontWeight: 600 }}
+                        />
+                      ))}
+                    </Box>
+                  </MuiTooltip>
+                )}
+              </Stack>
             </TableCell>
             <TableCell>
-              {row.depots_test_drivers && row.depots_test_drivers.length > 0 && (
-                <Box component="span" sx={{ mr: 1 }}>
-                  <b>{t('test_drivers', language as Language)}:</b>{" "}
-                  {row.depots_test_drivers.join(", ")}
-                </Box>
-              )}
-              {row.depots_locomotives && row.depots_locomotives.length > 0 && (
-                <Box component="span">
-                  <b>{t('locomotives', language as Language)}:</b>{" "}
-                  {row.depots_locomotives.join(", ")}
-                </Box>
-              )}
-              {(!row.depots_test_drivers?.length && !row.depots_locomotives?.length) && "-"}
+              <Stack direction="row" spacing={2}>
+                {row.depots_test_drivers && row.depots_test_drivers.length > 0 && (
+                  <MuiTooltip title={row.depots_test_drivers.join(', ')} arrow>
+                    <Box display="flex" alignItems="center">
+                      <DirectionsRunIcon sx={{ color: '#1976d2', mr: 0.5 }} fontSize="small" />
+                      <span style={{ fontWeight: 500 }}>{row.depots_test_drivers.join(', ')}</span>
+                    </Box>
+                  </MuiTooltip>
+                )}
+                {row.depots_locomotives && row.depots_locomotives.length > 0 && (
+                  <MuiTooltip title={row.depots_locomotives.join(', ')} arrow>
+                    <Box display="flex" alignItems="center">
+                      <TrainIcon sx={{ color: '#ff9800', mr: 0.5 }} fontSize="small" />
+                      <span style={{ fontWeight: 500 }}>{row.depots_locomotives.join(', ')}</span>
+                    </Box>
+                  </MuiTooltip>
+                )}
+                {(!row.depots_test_drivers?.length && !row.depots_locomotives?.length) && <span>-</span>}
+              </Stack>
             </TableCell>
           </TableRow>
         ))}
@@ -243,7 +267,7 @@ const StatisticsView: React.FC = () => {
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="date" />
               <YAxis />
-              <Tooltip />
+              <RechartsTooltip />
               <Legend />
               <Line type="monotone" dataKey="test_drivers" stroke={redPalette.main} name={t('test_drivers', language) || "Conducteurs d'essai"} />
               <Line type="monotone" dataKey="locomotives" stroke={redPalette.accent} name={t('locomotives', language) || "Locomotives"} />
@@ -330,7 +354,7 @@ const StatisticsView: React.FC = () => {
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip />
+                    <RechartsTooltip />
                   </PieChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -360,7 +384,7 @@ const StatisticsView: React.FC = () => {
                         <Cell key={`cell-electric-${index}`} fill={index === 0 ? redPalette.light : redPalette.faded} />
                       ))}
                     </Pie>
-                    <Tooltip />
+                    <RechartsTooltip />
                   </PieChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -379,7 +403,7 @@ const StatisticsView: React.FC = () => {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
                     <YAxis />
-                    <Tooltip />
+                    <RechartsTooltip />
                     <Legend />
                     <Bar dataKey="trains" fill={redPalette.main} name={t('number_of_trains', language) || "Nombre de trains"} />
                   </BarChart>
@@ -400,7 +424,7 @@ const StatisticsView: React.FC = () => {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="range" />
                     <YAxis />
-                    <Tooltip />
+                    <RechartsTooltip />
                     <Legend />
                     <Bar dataKey="count" fill={redPalette.light} name={t('number_of_trains', language) || "Nombre de trains"} />
                   </BarChart>
@@ -421,7 +445,7 @@ const StatisticsView: React.FC = () => {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
                     <YAxis />
-                    <Tooltip formatter={(value) => [`${value}%`, t('occupancy_rate', language) || "Taux d'occupation"]} />
+                    <RechartsTooltip formatter={(value: any) => [`${value}%`, t('occupancy_rate', language) || "Taux d'occupation"]} />
                     <Legend />
                     <Bar dataKey="occupation" fill={redPalette.accent} name={t('occupancy_rate', language) || "Taux d'occupation (%)"} />
                   </BarChart>

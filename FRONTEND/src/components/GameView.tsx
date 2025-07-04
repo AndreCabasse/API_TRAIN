@@ -389,7 +389,7 @@ const GameView: React.FC = () => {
 
                 {/* Sélection de la voie */}
                 <FormControl fullWidth sx={{ mb: 2 }}>
-                  <InputLabel>{t('select_track', language)}</InputLabel>
+                  <InputLabel sx={{ color: "#23272F", bgcolor: "#fff", px: 0.5, borderRadius: 1, fontWeight: 600 }}>{t('select_track', language)}</InputLabel>
                   <Select
                     value={selectedTrack}
                     onChange={(e) => setSelectedTrack(e.target.value as number)}
@@ -409,7 +409,7 @@ const GameView: React.FC = () => {
                 <Grid container spacing={1}>
                   <Grid item xs={6}>
                     <FormControl fullWidth>
-                      <InputLabel>{t('wagon', language)}</InputLabel>
+                      <InputLabel sx={{ color: "#23272F", bgcolor: "#fff", px: 0.5, borderRadius: 1, fontWeight: 600 }}>{t('wagon', language)}</InputLabel>
                       <Select
                         value={selectedWagonType}
                         onChange={(e) => setSelectedWagonType(e.target.value)}
@@ -424,7 +424,7 @@ const GameView: React.FC = () => {
                   </Grid>
                   <Grid item xs={6}>
                     <FormControl fullWidth>
-                      <InputLabel>{t('direction', language)}</InputLabel>
+                      <InputLabel sx={{ color: "#23272F", bgcolor: "#fff", px: 0.5, borderRadius: 1, fontWeight: 600 }}>{t('direction', language)}</InputLabel>
                       <Select
                         value={selectedDirection}
                         onChange={(e) => setSelectedDirection(e.target.value)}
