@@ -87,20 +87,23 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
 
 @router.post("/register")
 def register(user: UserIn):
-    if get_user(user.username):
-        raise HTTPException(status_code=400, detail="Username already registered")
-    hashed = get_password_hash(user.password)
-    user_db = UserDB(
-        username=user.username,
-        email=user.email,
-        hashed_password=hashed,
-        preferences={},
-        history=[]
-    )
+    # Vérifie si l'utilisateur existe déjà
     with Session(engine) as session:
+        existing = session.exec(select(UserDB).where(UserDB.username == user.username)).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Username already registered")
+        hashed_password = get_password_hash(user.password)
+        user_db = UserDB(
+            username=user.username,
+            email=user.email,
+            hashed_password=hashed_password,
+            preferences={},
+            history=[]
+        )
         session.add(user_db)
         session.commit()
-    return {"msg": "User registered"}
+        session.refresh(user_db)
+        return {"username": user_db.username, "email": user_db.email}
 
 @router.post("/token")
 def login(form_data: OAuth2PasswordRequestForm = Depends()):

@@ -30,14 +30,14 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3001",
         "http://localhost:3000",
-        "https://web-production-76c6f.up.railway.app"
+        "https://web-production-76c6f.up.railway.app",
+        "https://web-production-1e33b.up.railway.app"
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*", "Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With"],
     expose_headers=["*", "Authorization", "Content-Type"],
 )
-
 
 # Handler global pour toutes les requêtes OPTIONS (préflight CORS)
 from fastapi import Request
