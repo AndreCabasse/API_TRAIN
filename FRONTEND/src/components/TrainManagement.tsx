@@ -172,13 +172,13 @@ const TrainManagement: React.FC = () => {
 
   // Sauvegarde après suppression
   const handleDeleteTrain = async (trainId: number, trainName: string) => {
-    if (window.confirm(`${t('delete_train_confirm', language) || 'Delete train'} \"${trainName}\" ?`)) {
+    if (window.confirm(`${t('delete_train_confirm', language) || 'Delete train'} "${trainName}" ?`)) {
       try {
         await trainApi.deleteTrain(trainId);
         const updatedTrains = await trainApi.getTrains();
         setTrains(updatedTrains);
         await saveCurrentSimulation(updatedTrains);
-        showSnackbar(`${t('train_deleted', language) || 'Train deleted'} \"${trainName}\"`, 'success');
+        showSnackbar(`${t('train_deleted', language) || 'Train deleted'} "${trainName}"`, 'success');
       } catch (error) {
         showSnackbar(t('delete_error', language) || 'Error while deleting', 'error');
       }
