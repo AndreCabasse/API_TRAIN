@@ -116,7 +116,7 @@ const TrainManagement: React.FC = () => {
       const data = await trainApi.getTrains();
       setTrains(data);
     } catch (error) {
-      showSnackbar('Erreur lors du chargement des trains', 'error');
+      showSnackbar(t('load_trains_error', language) || 'Error loading trains', 'error');
     } finally {
       setLoading(false);
     }
@@ -130,7 +130,7 @@ const TrainManagement: React.FC = () => {
         setFormData((prev) => ({ ...prev, depot: data[0].depot }));
       }
     } catch (error) {
-      showSnackbar('Erreur lors du chargement des dépôts', 'error');
+      showSnackbar(t('load_depots_error', language) || 'Error loading depots', 'error');
     }
   };
 
@@ -172,15 +172,15 @@ const TrainManagement: React.FC = () => {
 
   // Sauvegarde après suppression
   const handleDeleteTrain = async (trainId: number, trainName: string) => {
-    if (window.confirm(`Supprimer le train "${trainName}" ?`)) {
+    if (window.confirm(`${t('delete_train_confirm', language) || 'Delete train'} \"${trainName}\" ?`)) {
       try {
         await trainApi.deleteTrain(trainId);
         const updatedTrains = await trainApi.getTrains();
         setTrains(updatedTrains);
         await saveCurrentSimulation(updatedTrains);
-        showSnackbar(`Train "${trainName}" supprimé`, 'success');
+        showSnackbar(`${t('train_deleted', language) || 'Train deleted'} \"${trainName}\"`, 'success');
       } catch (error) {
-        showSnackbar('Erreur lors de la suppression', 'error');
+        showSnackbar(t('delete_error', language) || 'Error while deleting', 'error');
       }
     }
   };
@@ -188,23 +188,23 @@ const TrainManagement: React.FC = () => {
   // Sauvegarde après ajout/modification
   const handleSubmit = async () => {
     if (!formData.nom || formData.wagons < 1 || formData.locomotives < 0) {
-      showSnackbar('Veuillez remplir tous les champs', 'error');
+      showSnackbar(t('fill_all_fields', language) || 'Please fill all fields', 'error');
       return;
     }
     if (new Date(formData.arrivee) >= new Date(formData.depart)) {
-      showSnackbar('L\'heure de départ doit être après l\'arrivée', 'error');
+      showSnackbar(t('departure_after_arrival', language) || 'Departure time must be after arrival', 'error');
       return;
     }
     try {
       if (editingTrain) {
         await trainApi.updateTrain(editingTrain.id, formData);
-        showSnackbar(`Train modifié`, 'success');
+        showSnackbar(t('train_modified', language) || 'Train updated', 'success');
       } else {
         await trainApi.addTrain(formData);
-        showSnackbar(`Train ajouté`, 'success');
+        showSnackbar(t('train_added', language) || 'Train added', 'success');
       }
       await userApi.addHistory({
-        action: "Ajout train",
+        action: t('add_train_action', language) || 'Add train',
         train: formData.nom,
         date: new Date().toISOString()
       });
@@ -214,14 +214,13 @@ const TrainManagement: React.FC = () => {
       await saveCurrentSimulation(updatedTrains);
     } catch (error: any) {
       if (error && error.isDepotConflict && error.depots_disponibles) {
-        // Message personnalisé avec la liste des dépôts disponibles
         showSnackbar(
-          `${t('no_track_available', language)} ${formData.depot}.\n` +
-          `${t('suggested_depots', language)}: ${error.depots_disponibles.join(', ')}`,
+          `${t('no_track_available', language) || 'No track available for'} ${formData.depot}.\n` +
+          `${t('suggested_depots', language) || 'Suggested depots'}: ${error.depots_disponibles.join(', ')}`,
           'error'
         );
       } else {
-        showSnackbar('Erreur lors de la sauvegarde', 'error');
+        showSnackbar(t('save_error', language) || 'Error while saving', 'error');
       }
     }
   };
@@ -231,7 +230,6 @@ const TrainManagement: React.FC = () => {
       const formData = new FormData();
       formData.append('file', e.target.files[0]);
       try {
-        // Utilise l'URL d'API du backend (compatible local et prod)
         const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
         const res = await fetch(`${apiUrl}/import-trains-excel`, {
           method: 'POST',
@@ -239,26 +237,26 @@ const TrainManagement: React.FC = () => {
         });
         const data = await res.json();
         if (data.imported?.length) {
-          showSnackbar(`${t('import_success', language)}: ${data.imported.join(', ')}`, 'success');
+          showSnackbar(`${t('import_success', language) || 'Import success'}: ${data.imported.join(', ')}`, 'success');
         }
         if (data.errors?.length) {
-          showSnackbar(`${t('import_error', language)}: ${data.errors.join('\n')}`, 'error');
+          showSnackbar(`${t('import_error', language) || 'Import error'}: ${data.errors.join('\n')}`, 'error');
         }
         await loadTrains();
       } catch (err) {
-        showSnackbar(t('import_error', language), 'error');
+        showSnackbar(t('import_error', language) || 'Import error', 'error');
       }
     }
   };
 
   const handleResetSimulation = async () => {
-    if (window.confirm(t('reset_confirm', language))) {
+    if (window.confirm(t('reset_confirm', language) || 'Are you sure you want to reset?')) {
       try {
         await trainApi.resetSimulation();
         await loadTrains();
-        showSnackbar(t('simulation_reset', language), 'success');
+        showSnackbar(t('simulation_reset', language) || 'Simulation reset', 'success');
       } catch (error) {
-        showSnackbar(t('reset_error', language), 'error');
+        showSnackbar(t('reset_error', language) || 'Reset error', 'error');
       }
     }
   };

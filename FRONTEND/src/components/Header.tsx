@@ -86,26 +86,64 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabChange }) => {
         background: 'linear-gradient(90deg,#23272F 60%, #757575 100%)',
         boxShadow: 3,
         zIndex: theme.zIndex.drawer + 1,
+        width: { xs: '100vw', sm: '100vw', md: '100vw', lg: '100vw' },
+        left: 0,
+        right: 0,
       }}
       elevation={4}
     >
-      <Toolbar sx={{ px: 3, minHeight: 72 }}>
+      <Toolbar
+        sx={{
+          px: { xs: 1, sm: 2, md: 3 },
+          minHeight: { xs: 56, sm: 64, md: 72 },
+          width: '100%',
+          boxSizing: 'border-box',
+        }}
+      >
         {/* Logo + Titre avec fond et ombre */}
-        <Box display="flex" alignItems="center" sx={{ mr: 3, px: 2, py: 1, borderRadius: 3, background: 'rgba(40,44,52,0.85)', boxShadow: '0 2px 12px 0 rgba(0,0,0,0.10)', backdropFilter: 'blur(4px)' }}>
-          <IconButton edge="start" sx={{ p: 0, mr: 1 }}>
+        <Box
+          display="flex"
+          alignItems="center"
+          sx={{
+            mr: { xs: 1, sm: 2, md: 3 },
+            px: { xs: 1, sm: 2 },
+            py: { xs: 0.5, sm: 1 },
+            borderRadius: 3,
+            background: 'rgba(40,44,52,0.85)',
+            boxShadow: '0 2px 12px 0 rgba(0,0,0,0.10)',
+            backdropFilter: 'blur(4px)',
+            minWidth: { xs: 0, sm: 120, md: 180 },
+            maxWidth: { xs: 180, sm: 260, md: 400 },
+          }}
+        >
+          <IconButton edge="start" sx={{ p: 0, mr: { xs: 0.5, sm: 1 } }}>
             <img
               src="/DSB1.png"
               alt="Logo DSB1"
-              style={{ height: 40, transition: 'transform 0.2s', borderRadius: 8 }}
+              style={{ height: 32, maxHeight: 40, width: 'auto', transition: 'transform 0.2s', borderRadius: 8 }}
               onMouseOver={e => (e.currentTarget.style.transform = 'scale(1.08)')}
               onMouseOut={e => (e.currentTarget.style.transform = 'scale(1)')}
             />
           </IconButton>
-          <Typography variant="h6" component="div" sx={{ fontWeight: 700, letterSpacing: 1, color: '#fff' }}>
+          <Typography
+            variant="h6"
+            component="div"
+            sx={{
+              fontWeight: 700,
+              letterSpacing: 1,
+              color: '#fff',
+              fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' },
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              ml: { xs: 0.5, sm: 1 },
+              maxWidth: { xs: 90, sm: 180, md: 300 },
+            }}
+          >
             {t('title', language)}
           </Typography>
         </Box>
-        <Box sx={{ width: 2, height: 48, bgcolor: 'rgba(255,255,255,0.12)', mx: 2, borderRadius: 1 }} />
+        <Box sx={{ width: 2, height: { xs: 32, sm: 40, md: 48 }, bgcolor: 'rgba(255,255,255,0.12)', mx: { xs: 1, sm: 2 }, borderRadius: 1, display: { xs: 'none', sm: 'block' } }} />
         {/* Responsive navigation */}
         {isSmallScreen ? (
           <>
@@ -113,7 +151,7 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabChange }) => {
               <span className="material-icons">menu</span>
             </IconButton>
             <Drawer anchor="right" open={drawerOpen} onClose={handleDrawerToggle}>
-              <Box sx={{ width: 270, p: 2 }} role="presentation" onClick={handleDrawerToggle}>
+              <Box sx={{ width: { xs: 220, sm: 270 }, p: 2 }} role="presentation" onClick={handleDrawerToggle}>
                 <List>
                   {tabs.map((tab) => (
                     <ListItem button key={tab.id} selected={activeTab === tab.id} onClick={() => onTabChange(tab.id)}>
@@ -150,7 +188,15 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabChange }) => {
           </>
         ) : (
           <>
-            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexGrow: 1 }}>
+            <Box sx={{
+              display: 'flex',
+              gap: { xs: 0.5, sm: 1 },
+              alignItems: 'center',
+              flexGrow: 1,
+              flexWrap: 'wrap',
+              minWidth: 0,
+              overflowX: 'auto',
+            }}>
               {tabs.map((tab) => (
                 <Button
                   key={tab.id}
@@ -190,7 +236,13 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabChange }) => {
                 </Button>
               ))}
             </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', ml: 2, gap: 2 }}>
+            <Box sx={{
+              display: 'flex',
+              alignItems: 'center',
+              ml: { xs: 0.5, sm: 2 },
+              gap: { xs: 1, sm: 2 },
+              flexShrink: 0,
+            }}>
               <FormControl size="small" sx={{ minWidth: 100 }}>
                 <InputLabel
                   sx={{

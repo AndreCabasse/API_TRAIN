@@ -1,3 +1,4 @@
+
 import axios from 'axios';
 import { Train, TrainFormData, Statistics} from '../types';
 
@@ -14,6 +15,12 @@ export const trainApi = {
   // ===== TRAINS =====
   getTrains: async (): Promise<Train[]> => {
     const response = await api.get('/trains');
+    return response.data;
+  },
+
+  // ===== OPTIMISATION GLOBALE =====
+  getOptimizedTrains: async (): Promise<any[]> => {
+    const response = await api.get('/trains/optimized');
     return response.data;
   },
 

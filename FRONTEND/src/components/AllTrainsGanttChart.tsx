@@ -53,6 +53,7 @@ interface AllTrainsGanttChartProps {
   legendOrientation?: "h" | "v";
   language: string;
   getWeekLinesAndAnnotations?: (startDate: string, endDate: string) => { shapes: Partial<Shape>[]; annotations: any[] };
+  data?: GanttTrain[];
 }
 
 const AllTrainsGanttChart = ({
@@ -61,11 +62,18 @@ const AllTrainsGanttChart = ({
   legendOrientation = "h",
   language,
   getWeekLinesAndAnnotations,
+  data: propsData,
 }: AllTrainsGanttChartProps) => {
-  const [data, setData] = useState<GanttTrain[]>([]);
+  const [internalData, setInternalData] = useState<GanttTrain[]>([]);
+
+  // Si les données sont fournies en props, on les utilise, sinon on fetch
+  const data = propsData ?? internalData;
+
   useEffect(() => {
-    trainApi.getAllTrainsGantt().then(setData);
-  }, []);
+    if (!propsData) {
+      trainApi.getAllTrainsGantt().then(setInternalData);
+    }
+  }, [propsData]);
 
   // Pour n'afficher chaque dépôt qu'une seule fois dans la légende
   const depotFirstIndex = new Map<string, number>();

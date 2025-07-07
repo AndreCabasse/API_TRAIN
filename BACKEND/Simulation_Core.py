@@ -37,6 +37,79 @@ class Train:
         return self.wagons * longueur_wagon + self.locomotives * longueur_locomotive
 
 class Simulation:
+
+    def optimiser_placement_global(self):
+        """
+        Optimise le placement de tous les trains dans tous les dépôts et voies,
+        indépendamment du dépôt initialement attribué, pour minimiser l'espace et le temps occupé.
+        Retourne une liste de trains avec leur placement optimal (dépôt, voie, horaires).
+        """
+        # Copie des trains pour ne pas modifier l'état courant
+        from copy import deepcopy
+        trains = deepcopy(self.trains)
+        # On trie les trains par heure d'arrivée
+        trains.sort(key=lambda t: t.arrivee)
+
+        # On prépare une structure occupation pour chaque dépôt
+        depots_occupation = {}
+        for depot, data in self.depots.items():
+            depots_occupation[depot] = {
+                "occupation": [],
+                "numeros_voies": data["numeros_voies"],
+                "longueurs_voies": data["longueurs_voies"]
+            }
+
+        # Pour chaque train, on cherche le meilleur placement (tous dépôts confondus)
+        placements = []
+        for train in trains:
+            best = None
+            best_depot = None
+            best_voie = None
+            best_debut = None
+            for depot, data in depots_occupation.items():
+                longueurs_voies = data["longueurs_voies"]
+                occupation = data["occupation"]
+                # Cherche une voie dispo dans ce dépôt
+                voie_idx, debut_placement = self.chercher_voie_disponible(
+                    train, train.arrivee, occupation, longueurs_voies
+                )
+                if voie_idx is not None and debut_placement < train.depart:
+                    # Critère d'optimisation : placement le plus tôt possible, puis voie la plus courte possible
+                    if best is None or debut_placement < best or (debut_placement == best and longueurs_voies[voie_idx] < longueurs_voies[best_voie]):
+                        best = debut_placement
+                        best_depot = depot
+                        best_voie = voie_idx
+                        best_debut = debut_placement
+            if best_depot is not None:
+                # On place le train dans ce dépôt/voie
+                depots_occupation[best_depot]["occupation"].append((best_voie, best_debut, train.depart, train))
+                placements.append({
+                    "id": train.id,
+                    "nom": train.nom,
+                    "arrivee": train.arrivee,
+                    "depart": train.depart,
+                    "longueur": train.longueur,
+                    "depot": best_depot,
+                    "voie": depots_occupation[best_depot]["numeros_voies"][best_voie],
+                    "debut_placement": best_debut,
+                    "fin_placement": train.depart,
+                    "en_attente": best_debut > train.arrivee,
+                })
+            else:
+                # Aucun placement possible
+                placements.append({
+                    "id": train.id,
+                    "nom": train.nom,
+                    "arrivee": train.arrivee,
+                    "depart": train.depart,
+                    "longueur": train.longueur,
+                    "depot": None,
+                    "voie": None,
+                    "debut_placement": None,
+                    "fin_placement": None,
+                    "en_attente": True,
+                })
+        return placements
     def __init__(self, depots_config=None):
         if depots_config is None:
             depots_config = {

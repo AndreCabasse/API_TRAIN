@@ -95,6 +95,19 @@ def get_trains():
 
 train_id_counter = 0
 
+
+# ===== ENDPOINT OPTIMISATION GLOBALE =====
+@app.get("/trains/optimized")
+@app.get("/trains/optimized/")
+def get_optimized_trains():
+    """
+    Retourne la solution optimale de placement des trains (tous dépôts confondus),
+    indépendamment des dépôts choisis à l'ajout.
+    """
+    # Appelle la méthode d'optimisation globale
+    result = simulation.optimiser_placement_global()
+    return result
+
 @app.post("/trains")
 def add_train(train: TrainIn):
     # Validation des champs obligatoires

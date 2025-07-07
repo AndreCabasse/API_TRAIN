@@ -132,16 +132,22 @@ Assurez-vous que votre backend FastAPI :
 2. Expose les endpoints nécessaires
 3. Retourne les données au format JSON attendu
 
-Exemple de configuration CORS pour FastAPI :
+Exemple de configuration CORS pour FastAPI :
 
 ```python
 from fastapi.middleware.cors import CORSMiddleware
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # URL du frontend
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "https://web-production-76c6f.up.railway.app",
+        "https://web-production-1e33b.up.railway.app"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"],
+    allow_headers=["*", "Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With"],
+    expose_headers=["*", "Authorization", "Content-Type"],
 )
 ```
