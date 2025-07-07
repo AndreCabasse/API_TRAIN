@@ -388,6 +388,14 @@ def get_train_details_instant(depot_name: str, instant: str):
     return get_train_length_detail(simulation, instant_dt, depot_name)
 
 # ===== ENDPOINTS MINI-JEU =====
+@app.get("/trains/optimized")
+@app.get("/trains/optimized/")
+def get_optimized_trains():
+    """
+    Retourne le placement optimal des trains (optimisation globale).
+    """
+    return simulation.optimiser_placement_global()
+
 class WagonAction(BaseModel):
     voie: int
     type_wagon: str
