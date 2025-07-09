@@ -18,7 +18,7 @@ import isoWeek from 'dayjs/plugin/isoWeek';
 import type { Shape } from 'plotly.js';
 dayjs.extend(isoWeek);
 
-// Palette de rouges nuancés harmonisée avec Dashboard
+// Harmonized red palette for Dashboard
 const redPalette = {
   main: '#D32F2F',
   light: '#FF6659',
@@ -31,24 +31,28 @@ const redPalette = {
   faded3: '#fff0f0',
 };
 
-// ----------- GanttChart avec couleurs par type -----------
+// ----------- GanttChart with color by train type -----------
+/**
+ * Returns a color based on the train type.
+ */
 const getColorForType = (type: string) => {
   switch (type) {
-    case 'storage': return '#1976d2';      // bleu
+    case 'storage': return '#1976d2';      // blue
     case 'testing': return '#ff9800';      // orange
-    case 'pit':     return redPalette.main;      // rouge
-    case 'passenger': return '#388e3c';    // vert
-    default:        return '#757575';      // gris
+    case 'pit':     return redPalette.main; // red
+    case 'passenger': return '#388e3c';    // green
+    default:        return '#757575';      // grey
   }
 };
 
+// Color palette for statistics cards
 const statCardPalette = [
-  { bg: "#1976d2", fg: "#fff" }, // Bleu vif
-  { bg: "#43a047", fg: "#fff" }, // Vert vif
-  { bg: "#ff9800", fg: "#fff" }, // Orange vif
+  { bg: "#1976d2", fg: "#fff" }, // Bright blue
+  { bg: "#43a047", fg: "#fff" }, // Bright green
+  { bg: "#ff9800", fg: "#fff" }, // Bright orange
 ];
 
-// Génère les barres verticales pour chaque début de semaine
+// Generate vertical lines and week annotations for the Gantt chart
 function getWeekLinesAndAnnotations(startDate: string, endDate: string) {
   const shapes: Partial<Shape>[] = [];
   const annotations: any[] = [];
@@ -72,9 +76,9 @@ function getWeekLinesAndAnnotations(startDate: string, endDate: string) {
     annotations.push({
       x: current.format('YYYY-MM-DDTHH:mm:ss'),
       yref: 'paper',
-      y: 1.04, // au-dessus du graphe
+      y: 1.04, // above the graph
       showarrow: false,
-      text: `S${current.isoWeek()}`,
+      text: `W${current.isoWeek()}`,
       font: { color: '#b71c1c', size: 13, family: "Roboto, Arial, sans-serif" },
       bgcolor: '#fff',
       opacity: 0.9,
@@ -85,6 +89,10 @@ function getWeekLinesAndAnnotations(startDate: string, endDate: string) {
   return { shapes, annotations };
 }
 
+// ----------- GanttChart component -----------
+/**
+ * Displays a Gantt chart for the selected depot and date range.
+ */
 const GanttChart: React.FC<{
   depot: string,
   startDate: string,
@@ -96,13 +104,14 @@ const GanttChart: React.FC<{
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Fetch Gantt data for the selected depot and filter by date range
   useEffect(() => {
     if (!depot) return;
     setLoading(true);
     setError(null);
     trainApi.getGantt(depot)
       .then((allData) => {
-        // Filtre par période sélectionnée
+        // Filter by selected period
         const filtered = allData.filter((d: any) => {
           const debut = new Date(d.debut);
           const fin = new Date(d.fin);
@@ -111,15 +120,16 @@ const GanttChart: React.FC<{
         });
         setData(filtered);
       })
-      .catch(() => setError(t('error_loading_gantt', language) || 'Erreur lors du chargement du Gantt'))
+      .catch(() => setError(t('error_loading_gantt', language) || 'Error loading Gantt'))
       .finally(() => setLoading(false));
   }, [depot, language, startDate, endDate]);
 
   if (!depot) return null;
   if (loading) return <Box display="flex" justifyContent="center"><CircularProgress /></Box>;
   if (error) return <Typography color="error">{error}</Typography>;
-  if (!data.length) return <Typography color="textSecondary">{t('no_gantt', language) || "Aucun Gantt à afficher"}</Typography>;
+  if (!data.length) return <Typography color="textSecondary">{t('no_gantt', language) || "No Gantt to display"}</Typography>;
 
+  // Format date for display in tooltips
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr);
     return d.toLocaleString(language, {
@@ -127,6 +137,7 @@ const GanttChart: React.FC<{
     });
   };
 
+  // Tooltip template for Gantt bars
   const hoverTemplate =
     ` <span style="font-weight:bold;color:#1976d2;">${t('train', language)}:</span> <span style="font-weight:bold;">%{customdata[6]}</span> %{customdata[4]}<br>
       <span style="color:#388e3c;">${t('track', language)}:</span> %{customdata[1]}<br>
@@ -135,6 +146,7 @@ const GanttChart: React.FC<{
       <span style="color:#d32f2f;">${t('length', language)}:</span> %{customdata[5]} m
   <extra></extra>`;
 
+  // Prepare data for Plotly Gantt chart
   const plotData = data.map((d: any) => ({
     type: "scatter" as const,
     mode: "lines" as const,
@@ -151,19 +163,19 @@ const GanttChart: React.FC<{
     },
     text: d.train_nom,
     customdata: [[
-      `${formatDate(d.debut)} → ${formatDate(d.fin)}`, // 0: horaires
-      d.voie,                                          // 1: voie
+      `${formatDate(d.debut)} → ${formatDate(d.fin)}`, // 0: schedule
+      d.voie,                                          // 1: track
       t(d.type, language),                             // 2: type
       d.train_id,                                      // 3: id
-      d.electrique ? "⚡" : "",                        // 4: electrique
-      d.longueur || "",                                // 5: longueur
-      d.train_nom,                                     // 6: nom du train
+      d.electrique ? "⚡" : "",                        // 4: electric
+      d.longueur || "",                                // 5: length
+      d.train_nom,                                     // 6: train name
     ]],
     hovertemplate: hoverTemplate,
     showlegend: false,
   }));
 
-  // Ajout des barres verticales de semaine
+  // Add vertical week lines and annotations
   const { shapes: weekShapes, annotations: weekAnnotations } = getWeekLinesAndAnnotations(startDate, endDate);
 
   return (
@@ -215,7 +227,7 @@ const GanttChart: React.FC<{
             bordercolor: "#1976d2",
             font: { color: "#222", size: 15 }
           },
-          shapes: weekShapes, // <--- Ajout des barres verticales
+          shapes: weekShapes, // Add vertical week lines
           annotations: weekAnnotations,
         }}
         style={{ width: "100%", height: 440, borderRadius: 16, boxShadow: "0 2px 16px #bbb" }}
@@ -226,11 +238,14 @@ const GanttChart: React.FC<{
 };
 // ----------- End GanttChart -----------
 
-// ----------- Timeline moderne avec @mui/lab -----------
+// ----------- Modern Timeline with @mui/lab -----------
+/**
+ * Displays a timeline of train arrivals for the depot.
+ */
 const ModernTimeline: React.FC<{ trains: Train[], refDiv?: React.RefObject<HTMLDivElement> }> = ({ trains, refDiv }) => {
   const { language } = useLanguage();
   if (!trains.length) return null;
-  // Tri par date d'arrivée
+  // Sort trains by arrival date
   const sorted = [...trains].sort((a, b) => new Date(a.arrivee).getTime() - new Date(b.arrivee).getTime());
   return (
     <Paper
@@ -245,7 +260,7 @@ const ModernTimeline: React.FC<{ trains: Train[], refDiv?: React.RefObject<HTMLD
         '&:hover': { boxShadow: 10 }
       }}>
       <Typography variant="h6" gutterBottom color={redPalette.main}>
-        {t('timeline_arrivals', language) || "Arrivées prochaines"}
+        {t('timeline_arrivals', language) || "Upcoming Arrivals"}
       </Typography>
       <Timeline
         sx={{
@@ -285,7 +300,10 @@ const ModernTimeline: React.FC<{ trains: Train[], refDiv?: React.RefObject<HTMLD
 };
 // ----------- End Timeline -----------
 
-// ----------- Liste détaillée des trains (entrées/sorties) -----------
+// ----------- Detailed train list (arrivals/departures) -----------
+/**
+ * Displays a detailed table of trains for the depot.
+ */
 const TrainListTable: React.FC<{ trains: Train[], refDiv?: React.RefObject<HTMLDivElement> }> = ({ trains, refDiv }) => {
   const { language } = useLanguage();
   if (!trains.length) return null;
@@ -303,17 +321,17 @@ const TrainListTable: React.FC<{ trains: Train[], refDiv?: React.RefObject<HTMLD
       }}
     >
       <Typography variant="h6" gutterBottom color={redPalette.dark}>
-        {t('detailed_train_list', language) || "Liste détaillée des trains"}
+        {t('detailed_train_list', language) || "Detailed Train List"}
       </Typography>
       <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse', fontSize: 15 }}>
         <thead>
           <tr>
             <th style={{ borderBottom: '1px solid #ccc', padding: 6 }}>{t('trains', language) || "Train"}</th>
             <th style={{ borderBottom: '1px solid #ccc', padding: 6 }}>{t('train_type', language) || "Type"}</th>
-            <th style={{ borderBottom: '1px solid #ccc', padding: 6 }}>{t('arrival_time', language) || "Arrivée"}</th>
-            <th style={{ borderBottom: '1px solid #ccc', padding: 6 }}>{t('departure_time', language) || "Départ"}</th>
-            <th style={{ borderBottom: '1px solid #ccc', padding: 6 }}>{t('track', language) || "Voie"}</th>
-            <th style={{ borderBottom: '1px solid #ccc', padding: 6 }}>{t('length', language) || "Longueur"}</th>
+            <th style={{ borderBottom: '1px solid #ccc', padding: 6 }}>{t('arrival_time', language) || "Arrival"}</th>
+            <th style={{ borderBottom: '1px solid #ccc', padding: 6 }}>{t('departure_time', language) || "Departure"}</th>
+            <th style={{ borderBottom: '1px solid #ccc', padding: 6 }}>{t('track', language) || "Track"}</th>
+            <th style={{ borderBottom: '1px solid #ccc', padding: 6 }}>{t('length', language) || "Length"}</th>
           </tr>
         </thead>
         <tbody>
@@ -332,9 +350,12 @@ const TrainListTable: React.FC<{ trains: Train[], refDiv?: React.RefObject<HTMLD
     </Box>
   );
 };
-// ----------- End Liste détaillée -----------
+// ----------- End detailed list -----------
 
-// Nouveau StatCard plus grand et vertical
+// New, larger, vertical StatCard for depot statistics
+/**
+ * Displays a statistics card with icon, label, and value.
+ */
 const StatCard = ({
   icon,
   label,
@@ -401,7 +422,10 @@ const StatCard = ({
   </Paper>
 );
 
-// ----------- DepotView principal -----------
+// ----------- Main DepotView component -----------
+/**
+ * Main component for viewing depot information, statistics, Gantt chart, timeline, and train lists.
+ */
 const DepotView: React.FC = () => {
   const { language } = useLanguage();
   const [trains, setTrains] = useState<Train[]>([]);
@@ -411,24 +435,24 @@ const DepotView: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Filtres période
+  // Date range filters for the Gantt chart
   const [startDate, setStartDate] = useState<string>(dayjs().subtract(1, 'day').format('YYYY-MM-DDTHH:mm'));
   const [endDate, setEndDate] = useState<string>(dayjs().add(2, 'day').format('YYYY-MM-DDTHH:mm'));
 
-  // Refs pour export PDF
+  // Refs for PDF export (Gantt, Timeline, Train List)
   const ganttRef = useRef<HTMLDivElement>(null);
   const timelineRef = useRef<HTMLDivElement>(null);
   const trainListRef = useRef<HTMLDivElement>(null);
 
-  // Chargement des dépôts
+  // Load list of depots on mount or language change
   useEffect(() => {
     trainApi.getDepots()
       .then(setDepots)
-      .catch(() => setError(t('error_loading_depots', language) || 'Erreur lors du chargement des dépôts'))
+      .catch(() => setError(t('error_loading_depots', language) || 'Error loading depots'))
       .finally(() => setLoading(false));
   }, [language]);
 
-  // Chargement des infos du dépôt et des trains
+  // Load depot info and trains when depot or language changes
   useEffect(() => {
     if (!selectedDepot) return;
     setLoading(true);
@@ -441,14 +465,18 @@ const DepotView: React.FC = () => {
         setDepotInfo(info);
         setTrains(trainsData);
       })
-      .catch(() => setError(t('error_loading_data', language) || 'Erreur lors du chargement des données'))
+      .catch(() => setError(t('error_loading_data', language) || 'Error loading data'))
       .finally(() => setLoading(false));
   }, [selectedDepot, language]);
 
+  // Filter trains for the selected depot
   const depotTrains = trains.filter(train => train.depot === selectedDepot);
   const depotTrainsEnAttente = depotTrains.filter(train => train.en_attente);
 
-  // ----------- Ajout bouton plage maximale -----------
+  // ----------- Set date range to cover all trains in depot -----------
+  /**
+   * Set the date range to cover all arrivals and departures for the depot, with a margin.
+   */
   const setFullDateRange = () => {
     if (depotTrains.length === 0) return;
     const arrivees = depotTrains.map(t => dayjs(t.arrivee).valueOf());
@@ -459,7 +487,10 @@ const DepotView: React.FC = () => {
     setEndDate(maxDepart.add(2, 'day').format('YYYY-MM-DDTHH:mm'));
   };
 
-  // ----------- Export PDF Gantt + Timeline + Liste détaillée -----------
+  // ----------- Export Gantt, Timeline, and Train List as PDF -----------
+  /**
+   * Exports the Gantt chart, timeline, and train list as a single PDF file.
+   */
   const handleExportPDF = async () => {
     const jsPDF = (await import('jspdf')).default;
     const html2canvas = (await import('html2canvas')).default;
@@ -469,7 +500,7 @@ const DepotView: React.FC = () => {
       format: 'a4'
     });
 
-    // Gantt
+    // Export Gantt chart
     if (ganttRef.current) {
       const ganttCanvas = await html2canvas(ganttRef.current, { backgroundColor: null, scale: 2 });
       const imgData = ganttCanvas.toDataURL('image/png');
@@ -479,7 +510,7 @@ const DepotView: React.FC = () => {
       doc.addImage(imgData, 'PNG', 20, 20, pageWidth - 40, imgHeight);
       let y = imgHeight + 40;
 
-      // Timeline
+      // Export Timeline
       if (timelineRef.current) {
         const timelineCanvas = await html2canvas(timelineRef.current, { backgroundColor: null, scale: 2 });
         const timelineImg = timelineCanvas.toDataURL('image/png');
@@ -493,7 +524,7 @@ const DepotView: React.FC = () => {
         y += timelineHeight + 20;
       }
 
-      // Liste détaillée
+      // Export Train List
       if (trainListRef.current) {
         const trainListCanvas = await html2canvas(trainListRef.current, { backgroundColor: null, scale: 2 });
         const trainListImg = trainListCanvas.toDataURL('image/png');
@@ -526,6 +557,7 @@ const DepotView: React.FC = () => {
           justifyContent: 'flex-start',
         }}
       >
+        {/* PDF Export Button */}
         {selectedDepot && (
           <Box display="flex" justifyContent="flex-end" mb={2}>
             <Button
@@ -534,10 +566,11 @@ const DepotView: React.FC = () => {
               startIcon={<DownloadIcon />}
               onClick={handleExportPDF}
             >
-              Exporter PDF
+              Export PDF
             </Button>
           </Box>
         )}
+        {/* Depot selection and title */}
         <Box
           display="flex"
           justifyContent="space-between"
@@ -570,7 +603,7 @@ const DepotView: React.FC = () => {
             </Select>
           </FormControl>
         </Box>
-        {/* Filtres période */}
+        {/* Date range filters */}
         <Box
           display="flex"
           gap={2}
@@ -584,7 +617,7 @@ const DepotView: React.FC = () => {
           }}
         >
           <TextField
-            label={t('start_date', language) || "Début"}
+            label={t('start_date', language) || "Start"}
             type="datetime-local"
             size="small"
             value={startDate}
@@ -593,7 +626,7 @@ const DepotView: React.FC = () => {
             sx={{ background: 'white', borderRadius: 2 }}
           />
           <TextField
-            label={t('end_date', language) || "Fin"}
+            label={t('end_date', language) || "End"}
             type="datetime-local"
             size="small"
             value={endDate}
@@ -614,45 +647,47 @@ const DepotView: React.FC = () => {
               },
             }}
           >
-            {t('full_range', language) || "Plage maximale"}
+            {t('full_range', language) || "Full range"}
           </Button>
         </Box>
+        {/* Error and loading indicators */}
         {error && <Typography color="error">{error}</Typography>}
         {loading && <Box display="flex" justifyContent="center"><CircularProgress /></Box>}
+        {/* Main content: Gantt, Timeline, Train List, Stats, Waiting Trains */}
         {!loading && selectedDepot && depotInfo && (
           <Grid container spacing={3}>
-            {/* Gantt uniquement */}
+            {/* Gantt chart */}
             <Grid item xs={12}>
               <GanttChart depot={selectedDepot} startDate={startDate} endDate={endDate} refDiv={ganttRef} />
             </Grid>
-            {/* Timeline moderne */}
+            {/* Timeline */}
             <Grid item xs={12}>
               <ModernTimeline trains={depotTrains} refDiv={timelineRef} />
             </Grid>
-            {/* Liste détaillée des trains */}
+            {/* Detailed train list */}
             <Grid item xs={12}>
               <TrainListTable trains={depotTrains} refDiv={trainListRef} />
             </Grid>
-            {/* Statistiques du dépôt avec icônes */}
+            {/* Depot statistics with icons */}
             <Grid item xs={12} md={6}>
               <Stack direction="row" spacing={2} mb={2} sx={{ width: '100%' }}>
                 <StatCard
                   icon={<TrackIcon fontSize="large" />}
-                  label={t('number_of_tracks', language) || "Nombre de voies"}
+                  label={t('number_of_tracks', language) || "Number of tracks"}
                   value={depotInfo.nb_voies !== undefined && depotInfo.nb_voies !== null ? depotInfo.nb_voies : <span style={{ opacity: 0.5 }}>?</span>}
                   color={statCardPalette[0].bg}
                   fgColor={statCardPalette[0].fg}
                 />
                 <StatCard
                   icon={<DirectionsRailwayIcon fontSize="large" />}
-                  label={t('number_of_trains', language) || "Nombre de trains"}
+                  label={t('number_of_trains', language) || "Number of trains"}
                   value={depotTrains.length}
                   color={statCardPalette[1].bg}
                   fgColor={statCardPalette[1].fg}
                 />
                 <StatCard
                   icon={<HourglassEmptyIcon fontSize="large" />}
-                  label={t('number_of_waiting_trains', language) || "Trains en attente"}
+                  label={t('number_of_waiting_trains', language) || "Waiting trains"}
                   value={depotTrainsEnAttente.length}
                   color={statCardPalette[2].bg}
                   fgColor={statCardPalette[2].fg}
@@ -667,14 +702,14 @@ const DepotView: React.FC = () => {
                 boxShadow={2}
               >
                 <Typography variant="h6" gutterBottom color={redPalette.main}>
-                  {t('depot_stats', language) || "Statistiques détaillées"}
+                  {t('depot_stats', language) || "Detailed statistics"}
                 </Typography>
                 <Typography variant="body2" color="textSecondary">
-                  {t('depot_name', language) || "Dépôt"} : <b>{selectedDepot}</b>
+                  {t('depot_name', language) || "Depot"} : <b>{selectedDepot}</b>
                 </Typography>
               </Box>
             </Grid>
-            {/* Liste des trains en attente */}
+            {/* List of waiting trains */}
             <Grid item xs={12} md={6}>
               <Box
                 p={2}
@@ -685,10 +720,10 @@ const DepotView: React.FC = () => {
                 boxShadow={2}
               >
                 <Typography variant="h6" gutterBottom color={redPalette.accent}>
-                  {t('waiting_trains', language) || "Trains en attente"}
+                  {t('waiting_trains', language) || "Waiting trains"}
                 </Typography>
                 {depotTrainsEnAttente.length === 0 ? (
-                  <Typography color="textSecondary">{t('no_waiting_trains', language) || "Aucun train en attente"}</Typography>
+                  <Typography color="textSecondary">{t('no_waiting_trains', language) || "No waiting trains"}</Typography>
                 ) : (
                   depotTrainsEnAttente.map(train => (
                     <Tooltip

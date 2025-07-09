@@ -27,7 +27,7 @@ import AddCircleIcon from '@mui/icons-material/AddCircle';
 import TrainIcon from '@mui/icons-material/Train';
 import AutorenewIcon from '@mui/icons-material/Autorenew';
 
-// Import des images du dossier Layouts
+// Import images from Layouts folder
 import locoImg from '../assets/Vectron.png';
 import wagon1LeftImg from '../assets/wagon_1_left.png';
 import wagon1RightImg from '../assets/wagon_1_right.png';
@@ -36,6 +36,7 @@ import wagon23RightImg from '../assets/wagon_2_3_right.png';
 import wagon4LeftImg from '../assets/wagon_4_left.png';
 import wagon4RightImg from '../assets/wagon_4_right.png';
 
+// Color palette for UI accents
 const accentPalette = {
   main: '#D32F2F',
   light: '#FF6659',
@@ -48,6 +49,9 @@ const accentPalette = {
   green: '#43a047'
 };
 
+/**
+ * Normalize the direction string to 'left' or 'right'
+ */
 const normalizeDirection = (dir: string) => {
   if (!dir) return 'left';
   const d = dir.toLowerCase();
@@ -55,6 +59,9 @@ const normalizeDirection = (dir: string) => {
   return 'left';
 };
 
+/**
+ * Get the image for a train element (locomotive or wagon) based on its type and direction
+ */
 const getElementImage = (element: any) => {
   if (element.type === 'locomotive') return locoImg;
   const direction = normalizeDirection(element.direction || element.sens || 'left');
@@ -71,6 +78,10 @@ const getElementImage = (element: any) => {
   }
 };
 
+/**
+ * Main GameView component for the interactive train composition game.
+ * Allows adding/removing/moving wagons and locomotives on tracks.
+ */
 const GameView: React.FC = () => {
   const { language } = useLanguage();
   const [gameState, setGameState] = useState<any>({});
@@ -79,23 +90,33 @@ const GameView: React.FC = () => {
   const [selectedDirection, setSelectedDirection] = useState<string>('left');
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
 
+  // Load the game state from the API on mount
   useEffect(() => {
     loadGameState();
   }, []);
 
+  /**
+   * Fetch the current game state from the backend API
+   */
   const loadGameState = async () => {
     try {
       const state = await trainApi.getGameState();
       setGameState(state);
     } catch (error) {
-      console.error('Erreur lors du chargement de l\'état du jeu:', error);
+      console.error('Error loading game state:', error);
     }
   };
 
+  /**
+   * Show a snackbar notification
+   */
   const showSnackbar = (message: string, severity: 'success' | 'error') => {
     setSnackbar({ open: true, message, severity });
   };
 
+  /**
+   * Add a wagon to the selected track with the selected type and direction
+   */
   const handleAddWagon = async () => {
     try {
       const result = await trainApi.addWagonToGame(selectedTrack, selectedWagonType, selectedDirection);
@@ -106,6 +127,9 @@ const GameView: React.FC = () => {
     }
   };
 
+  /**
+   * Add a locomotive to the selected track
+   */
   const handleAddLocomotive = async () => {
     try {
       const result = await trainApi.addLocomotiveToGame(selectedTrack);
@@ -116,6 +140,9 @@ const GameView: React.FC = () => {
     }
   };
 
+  /**
+   * Reset the game state to its initial state
+   */
   const handleResetGame = async () => {
     try {
       const result = await trainApi.resetGame();
@@ -126,6 +153,9 @@ const GameView: React.FC = () => {
     }
   };
 
+  /**
+   * Remove an element (wagon or locomotive) from a track at a given index
+   */
   const handleRemoveElement = async (trackNumber: number, elementIndex: number) => {
     try {
       const result = await trainApi.deleteElementFromGame(trackNumber, elementIndex);
@@ -136,6 +166,9 @@ const GameView: React.FC = () => {
     }
   };
 
+  /**
+   * Move an element left or right within a track
+   */
   const handleMoveElement = async (trackNumber: number, elementIndex: number, direction: 'left' | 'right') => {
     try {
       const result = await trainApi.swapWagonInGame(trackNumber, elementIndex, direction);
@@ -146,7 +179,9 @@ const GameView: React.FC = () => {
     }
   };
 
-  // Affichage des types de wagon
+  /**
+   * Get the label for a wagon type, translated
+   */
   const getWagonTypeLabel = (type: string) => {
     switch (type) {
       case '1': return t('wagon_type_1', language) || 'Type 1';
@@ -157,6 +192,9 @@ const GameView: React.FC = () => {
     }
   };
 
+  /**
+   * Render a single track with its elements (wagons/locomotives)
+   */
   const renderTrack = (trackNumber: number, elements: any[]) => {
     return (
       <Card
@@ -196,6 +234,7 @@ const GameView: React.FC = () => {
               minWidth: 0,
             }}
           >
+            {/* Show message if track is empty */}
             {elements.length === 0 ? (
               <Typography color="textSecondary">{t('empty_track', language)}</Typography>
             ) : (
@@ -222,6 +261,7 @@ const GameView: React.FC = () => {
                     }
                   }}
                 >
+                  {/* Train element image */}
                   <img
                     src={getElementImage(element)}
                     alt={element.type === 'locomotive' ? t('locomotive', language) : `${t('wagon', language)} ${element.type_wagon}`}
@@ -232,7 +272,7 @@ const GameView: React.FC = () => {
                       filter: element.type === 'locomotive' ? 'drop-shadow(0 0 8px #1976d2aa)' : 'drop-shadow(0 0 6px #ff980088)'
                     }}
                   />
-                  {/* Affichage du type de wagon */}
+                  {/* Wagon type label */}
                   {element.type === 'wagon' && (
                     <Typography
                       variant="caption"
@@ -247,6 +287,7 @@ const GameView: React.FC = () => {
                       {getWagonTypeLabel(element.type_wagon)}
                     </Typography>
                   )}
+                  {/* Locomotive label */}
                   {element.type === 'locomotive' && (
                     <Typography
                       variant="caption"
@@ -261,7 +302,7 @@ const GameView: React.FC = () => {
                       {t('locomotive', language)}
                     </Typography>
                   )}
-                  {/* Bouton supprimer */}
+                  {/* Delete button */}
                   <Tooltip title={t('delete', language)}>
                     <IconButton
                       size="small"
@@ -280,7 +321,7 @@ const GameView: React.FC = () => {
                       <DeleteIcon fontSize="small" />
                     </IconButton>
                   </Tooltip>
-                  {/* Bouton déplacer à gauche */}
+                  {/* Move left button */}
                   <span>
                     <IconButton
                       size="small"
@@ -299,7 +340,7 @@ const GameView: React.FC = () => {
                       <ArrowBackIosNewIcon sx={{ fontSize: 16 }}/>
                     </IconButton>
                   </span>
-                  {/* Bouton déplacer à droite */}
+                  {/* Move right button */}
                   <span>
                     <IconButton
                       size="small"
@@ -322,6 +363,7 @@ const GameView: React.FC = () => {
               ))
             )}
           </Box>
+          {/* Track length indicator */}
           <Typography variant="caption" color="textSecondary" sx={{ mt: 1 }}>
             {t('length', language)}: {elements.reduce((sum, e) => sum + (e.type === 'locomotive' ? 19 : 14), 0)}m / 300m
           </Typography>
@@ -353,7 +395,7 @@ const GameView: React.FC = () => {
         </Typography>
 
         <Grid container spacing={3}>
-          {/* Affichage des voies */}
+          {/* Track display */}
           <Grid item xs={12} md={8} lg={9}>
             <Typography variant="h6" gutterBottom color={accentPalette.blue} fontWeight="bold">
               {t('track_state', language)}
@@ -365,7 +407,7 @@ const GameView: React.FC = () => {
             </Box>
           </Grid>
 
-          {/* Contrôles */}
+          {/* Controls panel */}
           <Grid item xs={12} md={4} lg={3}>
             <Card
               sx={{
@@ -387,7 +429,7 @@ const GameView: React.FC = () => {
                   {t('actions', language)}
                 </Typography>
 
-                {/* Sélection de la voie */}
+                {/* Track selection */}
                 <FormControl fullWidth sx={{ mb: 2 }}>
                   <InputLabel sx={{ color: "#23272F", bgcolor: "#fff", px: 0.5, borderRadius: 1, fontWeight: 600 }}>{t('select_track', language)}</InputLabel>
                   <Select
@@ -402,7 +444,7 @@ const GameView: React.FC = () => {
                   </Select>
                 </FormControl>
 
-                {/* Ajouter un wagon */}
+                {/* Add wagon controls */}
                 <Typography variant="subtitle1" gutterBottom sx={{ mt: 2, color: accentPalette.main }}>
                   {t('add_wagon', language)}
                 </Typography>
@@ -456,7 +498,7 @@ const GameView: React.FC = () => {
                   {t('add_wagon_button', language)}
                 </Button>
 
-                {/* Ajouter une locomotive */}
+                {/* Add locomotive controls */}
                 <Typography variant="subtitle1" gutterBottom sx={{ mt: 2, color: accentPalette.blue }}>
                   {t('add_locomotive', language)}
                 </Typography>
@@ -477,7 +519,7 @@ const GameView: React.FC = () => {
                   {t('add_locomotive_button', language)}
                 </Button>
 
-                {/* Réinitialiser */}
+                {/* Reset game button */}
                 <Button
                   variant="outlined"
                   color="error"
@@ -496,7 +538,7 @@ const GameView: React.FC = () => {
                   {t('reset', language)}
                 </Button>
 
-                {/* Règles */}
+                {/* Game rules info box */}
                 <Box sx={{ mt: 3 }}>
                   <Alert
                     severity="info"
@@ -531,6 +573,7 @@ const GameView: React.FC = () => {
           </Grid>
         </Grid>
 
+        {/* Snackbar for notifications */}
         <Snackbar
           open={snackbar.open}
           autoHideDuration={6000}
