@@ -1,9 +1,15 @@
-[build]
-builder = "nixpacks"
+# ========================
+# Railway Deployment Config
+# ========================
 
+# Build section: defines the builder to use for deployment
+[build]
+builder = "nixpacks"  # Use Nixpacks for reproducible builds
+
+# Deploy section: defines how the app is started and monitored
 [deploy]
-startCommand = "uvicorn MAIN:app --host 0.0.0.0 --port $PORT"
-healthcheckPath = "/"
-healthcheckTimeout = 300
-restartPolicyType = "on_failure"
-restartPolicyMaxRetries = 10
+startCommand = "uvicorn MAIN:app --host 0.0.0.0 --port $PORT"  # Start FastAPI app with Uvicorn
+healthcheckPath = "/"                # Health check endpoint (root)
+healthcheckTimeout = 300              # Health check timeout in seconds
+restartPolicyType = "on_failure"      # Restart app only on failure
+restartPolicyMaxRetries = 10          # Maximum restart attempts before giving up
