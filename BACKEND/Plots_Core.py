@@ -9,8 +9,11 @@ from datetime import datetime
 
 def get_gantt_data(simulation, depot):
     """
-    Retourne les données nécessaires pour un diagramme de Gantt pour un dépôt donné.
-    Chaque entrée contient : train_id, train_nom, voie, debut, fin, type, electrique, longueur.
+    Return the data needed for a Gantt chart for a given depot.
+    Each entry contains: train_id, train_nom, voie, debut, fin, type, electrique, longueur.
+    - simulation: simulation object with .depots attribute
+    - depot: depot name (string)
+    Returns: list of dicts, one per train occupation interval
     """
     depot_data = simulation.depots.get(depot)
     if not depot_data or "occupation" not in depot_data:
@@ -27,14 +30,18 @@ def get_gantt_data(simulation, depot):
             "fin": fin.isoformat() if isinstance(fin, datetime) else str(fin),
             "type": getattr(train, "type", None),
             "electrique": getattr(train, "electrique", False),
-            "longueur": getattr(train, "longueur", None),  # <-- Ajout ici
+            "longueur": getattr(train, "longueur", None),  # Train length
         })
     return result
 
 def get_track_occupation_at_instant(simulation, instant, depot=None):
     """
-    Retourne la liste des trains présents sur chaque voie à un instant donné.
-    Si depot est None, retourne pour tous les dépôts.
+    Return the list of trains present on each track at a given instant.
+    If depot is None, returns for all depots.
+    - simulation: simulation object with .depots attribute
+    - instant: datetime to check occupation
+    - depot: depot name (optional)
+    Returns: list of dicts, one per train present at the instant
     """
     results = []
     depots_to_show = []
@@ -66,7 +73,11 @@ def get_track_occupation_at_instant(simulation, instant, depot=None):
 
 def get_train_length_detail(simulation, instant, depot=None):
     """
-    Retourne la composition détaillée (locomotives, wagons) de chaque train présent à un instant donné.
+    Return the detailed composition (locomotives, wagons) of each train present at a given instant.
+    - simulation: simulation object with .depots attribute
+    - instant: datetime to check occupation
+    - depot: depot name (optional)
+    Returns: list of dicts, each describing a train element (locomotive or wagon)
     """
     details = []
     depots_to_show = []
@@ -84,9 +95,10 @@ def get_train_length_detail(simulation, instant, depot=None):
             if debut <= instant <= fin:
                 voie_label = f"{numeros_voies[voie_idx]} ({depot_name})"
                 position_actuelle = 0
-                # Locomotive(s) et wagons
+                # If there is one locomotive, check its side
                 if getattr(train, "locomotives", 0) == 1:
                     if getattr(train, "locomotive_cote", None) == "left":
+                        # Locomotive at the left
                         details.append({
                             "train_id": train.id,
                             "train_nom": train.nom,
@@ -97,6 +109,7 @@ def get_train_length_detail(simulation, instant, depot=None):
                             "longueur": 19
                         })
                         position_actuelle += 19
+                        # Add wagons after the locomotive
                         for i in range(train.wagons):
                             details.append({
                                 "train_id": train.id,
@@ -109,6 +122,7 @@ def get_train_length_detail(simulation, instant, depot=None):
                             })
                             position_actuelle += 14
                     else:
+                        # Locomotive at the right
                         for i in range(train.wagons):
                             details.append({
                                 "train_id": train.id,
@@ -131,6 +145,7 @@ def get_train_length_detail(simulation, instant, depot=None):
                         })
                         position_actuelle += 19
                 elif getattr(train, "locomotives", 0) == 2:
+                    # Two locomotives: one at each end
                     details.append({
                         "train_id": train.id,
                         "train_nom": train.nom,
@@ -163,6 +178,7 @@ def get_train_length_detail(simulation, instant, depot=None):
                     })
                     position_actuelle += 19
                 elif getattr(train, "locomotives", 0) == 0:
+                    # No locomotive, only wagons
                     for i in range(train.wagons):
                         details.append({
                             "train_id": train.id,
@@ -178,7 +194,9 @@ def get_train_length_detail(simulation, instant, depot=None):
 
 def get_requirements_by_day(requirements_par_jour):
     """
-    Transforme les requirements par jour en liste de dicts pour affichage frontend.
+    Transform the requirements by day into a list of dicts for frontend display.
+    - requirements_par_jour: dict with day as key and requirements as value
+    Returns: list of dicts with date, test_drivers, and locomotives
     """
     data = []
     for jour, besoins in sorted(requirements_par_jour.items()):

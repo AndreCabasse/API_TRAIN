@@ -6,51 +6,63 @@ Created on Wed Jun 25 09:38:07 2025
 """
 
 """
-Simulation ferroviaire avec gestion chronologique et marge de sécurité.
+Railway simulation with chronological management and safety margin.
 """
 
 from datetime import datetime, timedelta
 from .Utiles_Core import verifier_conflit
 
 class Train:
+    """
+    Represents a train in the simulation.
+    Stores all relevant attributes for placement and scheduling.
+    """
     def __init__(self, id, nom, wagons, locomotives, arrivee, depart, depot, type="storage", electrique=False, locomotive_cote="left"):
         self.id = id
         self.nom = nom
         self.wagons = wagons
         self.locomotives = locomotives
-        self.longueur = self.calculer_longueur()
-        self.arrivee = arrivee
-        self.depart = depart
-        self.en_attente = False
+        self.longueur = self.calculer_longueur()  # Total length of the train
+        self.arrivee = arrivee  # Arrival datetime
+        self.depart = depart    # Departure datetime
+        self.en_attente = False # Is the train waiting for a track?
         self.debut_attente = None
         self.fin_attente = None
-        self.voie = None
+        self.voie = None       # Track number assigned
         self.electrique = electrique
         self.depot = depot
         self.type = type
-        self.locomotive_cote = locomotive_cote
-        self.type_wagon = None
+        self.locomotive_cote = locomotive_cote  # "left" or "right" for single locomotive
+        self.type_wagon = None # Optional: type of wagons
 
     def calculer_longueur(self):
+        """
+        Compute the total length of the train based on number of wagons and locomotives.
+        Returns: int (length in meters)
+        """
         longueur_wagon = 14
         longueur_locomotive = 19
         return self.wagons * longueur_wagon + self.locomotives * longueur_locomotive
 
 class Simulation:
+    """
+    Main simulation class.
+    Handles depots, trains, placement optimization, and recalculation logic.
+    """
 
     def optimiser_placement_global(self):
         """
-        Optimise le placement de tous les trains dans tous les dépôts et voies,
-        indépendamment du dépôt initialement attribué, pour minimiser l'espace et le temps occupé.
-        Retourne une liste de trains avec leur placement optimal (dépôt, voie, horaires).
+        Optimize the placement of all trains across all depots and tracks,
+        regardless of their initially assigned depot, to minimize space and time usage.
+        Returns a list of trains with their optimal placement (depot, track, schedule).
         """
-        # Copie des trains pour ne pas modifier l'état courant
+        # Deep copy trains to avoid modifying the current state
         from copy import deepcopy
         trains = deepcopy(self.trains)
-        # On trie les trains par heure d'arrivée
+        # Sort trains by arrival time
         trains.sort(key=lambda t: t.arrivee)
 
-        # On prépare une structure occupation pour chaque dépôt
+        # Prepare occupation structure for each depot
         depots_occupation = {}
         for depot, data in self.depots.items():
             depots_occupation[depot] = {
@@ -59,7 +71,7 @@ class Simulation:
                 "longueurs_voies": data["longueurs_voies"]
             }
 
-        # Pour chaque train, on cherche le meilleur placement (tous dépôts confondus)
+        # For each train, find the best placement (across all depots)
         placements = []
         for train in trains:
             best = None
@@ -69,19 +81,19 @@ class Simulation:
             for depot, data in depots_occupation.items():
                 longueurs_voies = data["longueurs_voies"]
                 occupation = data["occupation"]
-                # Cherche une voie dispo dans ce dépôt
+                # Search for an available track in this depot
                 voie_idx, debut_placement = self.chercher_voie_disponible(
                     train, train.arrivee, occupation, longueurs_voies
                 )
                 if voie_idx is not None and debut_placement < train.depart:
-                    # Critère d'optimisation : placement le plus tôt possible, puis voie la plus courte possible
+                    # Optimization: earliest possible placement, then shortest track possible
                     if best is None or debut_placement < best or (debut_placement == best and longueurs_voies[voie_idx] < longueurs_voies[best_voie]):
                         best = debut_placement
                         best_depot = depot
                         best_voie = voie_idx
                         best_debut = debut_placement
             if best_depot is not None:
-                # On place le train dans ce dépôt/voie
+                # Place the train in this depot/track
                 depots_occupation[best_depot]["occupation"].append((best_voie, best_debut, train.depart, train))
                 placements.append({
                     "id": train.id,
@@ -96,7 +108,7 @@ class Simulation:
                     "en_attente": best_debut > train.arrivee,
                 })
             else:
-                # Aucun placement possible
+                # No placement possible
                 placements.append({
                     "id": train.id,
                     "nom": train.nom,
@@ -110,7 +122,12 @@ class Simulation:
                     "en_attente": True,
                 })
         return placements
+
     def __init__(self, depots_config=None):
+        """
+        Initialize the simulation with a set of depots and their tracks.
+        If no config is provided, use a default set of depots.
+        """
         if depots_config is None:
             depots_config = {
                 "Glostrup": {"numeros_voies": [7,8,9,11], "longueurs_voies": [290,340,400,300], "lat": 55.662194, "lon": 12.393508},
@@ -136,10 +153,16 @@ class Simulation:
                 "lon": conf.get("lon"),
             }
         self.trains = []
-        self.delai_securite = 10  # minutes
+        self.delai_securite = 10  # Safety margin in minutes between trains
         self.historique = []
 
     def ajouter_depot(self, nom, numeros_voies, longueurs_voies):
+        """
+        Add a new depot to the simulation.
+        - nom: depot name
+        - numeros_voies: list of track numbers
+        - longueurs_voies: list of track lengths
+        """
         if nom in self.depots:
             return "Ce dépôt existe déjà."
         self.depots[nom] = {
@@ -149,6 +172,14 @@ class Simulation:
         }
 
     def ajouter_train(self, train, depot, optimiser=False, ajouter_a_liste=True):
+        """
+        Add a train to the simulation and recalculate placements.
+        - train: Train object
+        - depot: depot name
+        - optimiser: if True, optimize placement globally
+        - ajouter_a_liste: if True, add train to the train list
+        Returns: None if success, or error message string
+        """
         if train.arrivee >= train.depart:
             return "L'heure d'arrivée doit être antérieure à l'heure de départ."
         if train.longueur <= 0:
@@ -163,8 +194,12 @@ class Simulation:
 
     def chercher_voie_disponible(self, train, ref, occupation, longueurs_voies):
         """
-        Cherche une voie disponible pour le train, en respectant la marge de sécurité.
-        Retourne (voie_idx, debut_placement) ou (None, None) si impossible.
+        Search for an available track for the train, respecting the safety margin.
+        Returns (voie_idx, debut_placement) or (None, None) if impossible.
+        - train: Train object
+        - ref: reference datetime (usually arrival)
+        - occupation: list of (track_idx, start, end, train) tuples
+        - longueurs_voies: list of track lengths
         """
         occupation_par_voie = {i: [] for i in range(len(longueurs_voies))}
         for v, occ_debut, occ_fin, _ in occupation:
@@ -179,10 +214,10 @@ class Simulation:
                 continue
             debut = ref
             for occ_debut, occ_fin in occupation_par_voie[i]:
-                # Marge de sécurité de 10 minutes avant/après
+                # Safety margin of 10 minutes before/after
                 if debut - timedelta(minutes=self.delai_securite) < occ_fin and train.depart + timedelta(minutes=self.delai_securite) > occ_debut:
                     debut = occ_fin + timedelta(minutes=self.delai_securite)
-            # On ne place que si le train peut finir avant son départ
+            # Only place if the train can finish before its departure
             if debut < train.depart:
                 if meilleur_debut is None or debut < meilleur_debut:
                     meilleure_voie = i
@@ -190,12 +225,20 @@ class Simulation:
         return meilleure_voie, meilleur_debut
 
     def reset(self):
+        """
+        Reset all depots and trains in the simulation.
+        """
         for depot in self.depots.values():
             depot["occupation"].clear()
         self.trains.clear()
 
     def recalculer(self):
-        # Réinitialise tout
+        """
+        Recalculate all train placements in the simulation.
+        Places trains one by one in chronological order.
+        Updates train status (waiting, track assignment, etc.).
+        """
+        # Reset all depot occupations
         for depot in self.depots.values():
             depot["occupation"].clear()
         for train in self.trains:
@@ -204,10 +247,10 @@ class Simulation:
             train.debut_attente = train.arrivee
             train.fin_attente = None
 
-        # Trie tous les trains par heure d'arrivée (chronologique)
+        # Sort all trains by arrival time (chronological)
         self.trains.sort(key=lambda t: t.arrivee)
 
-        # Place les trains un par un, dans l'ordre d'arrivée
+        # Place trains one by one, in order of arrival
         for train in self.trains:
             depot = train.depot
             depot_data = self.depots[depot]
@@ -236,6 +279,11 @@ class Simulation:
                 train.fin_attente = None
 
     def undo(self):
+        """
+        Undo the last action (add, remove, or modify a train).
+        Restores the previous state from the history.
+        Returns None if successful, or an error message string.
+        """
         if not self.historique:
             return "Aucune action à annuler."
         last = self.historique.pop()

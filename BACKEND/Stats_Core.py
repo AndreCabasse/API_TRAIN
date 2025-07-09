@@ -9,7 +9,9 @@ from datetime import timedelta
 
 def calculer_temps_attente(train):
     """
-    Calcule le temps d'attente d'un train en minutes.
+    Compute the waiting time for a train in minutes.
+    Returns None if the train is still waiting and has no end time.
+    Returns 0 if there was no waiting.
     """
     if train.en_attente and train.fin_attente is None:
         return None
@@ -19,7 +21,9 @@ def calculer_temps_attente(train):
 
 def calculer_temps_moyen_attente(trains):
     """
-    Calcule le temps moyen d'attente pour une liste de trains.
+    Compute the average waiting time for a list of trains.
+    Ignores trains with undefined waiting time.
+    Returns 0 if no valid waiting times are found.
     """
     temps = [calculer_temps_attente(t) for t in trains if calculer_temps_attente(t) is not None]
     if not temps:
@@ -28,7 +32,8 @@ def calculer_temps_moyen_attente(trains):
 
 def calculer_taux_occupation(occupation, numeros_voies):
     """
-    Calcule le taux d'occupation des voies.
+    Compute the total occupation time (in seconds) for all tracks.
+    Returns 0 if there is no occupation or no tracks.
     """
     if not occupation or not numeros_voies:
         return 0
@@ -41,26 +46,32 @@ def calculer_taux_occupation(occupation, numeros_voies):
 
 def calculer_statistiques_globales(simulation):
     """
-    Calcule des statistiques globales sur la simulation.
+    Compute global statistics for the simulation.
+    Returns a dictionary with:
+      - total_trains: total number of trains
+      - trains_electriques: number of electric trains
+      - temps_moyen_attente: average waiting time
+      - taux_occupation_global: global occupation rate (%)
+      - stats_par_depot: statistics per depot (number of trains, occupation rate)
     """
     stats = {}
     stats["total_trains"] = len(simulation.trains)
     stats["trains_electriques"] = sum(1 for t in simulation.trains if t.electrique)
     stats["temps_moyen_attente"] = calculer_temps_moyen_attente(simulation.trains)
-    # Taux d'occupation global (en %)
+    # Compute global occupation rate (as a percentage)
     total_occupation = 0
     total_possible = 0
     for depot_name, depot in simulation.depots.items():
         occupation = depot["occupation"]
         numeros_voies = depot["numeros_voies"]
         longueurs_voies = depot["longueurs_voies"]
-        # On suppose une journée de 24h pour chaque voie
-        total_possible += len(numeros_voies) * 24 * 60  # en minutes
+        # Assume a 24-hour day for each track (in minutes)
+        total_possible += len(numeros_voies) * 24 * 60
         for voie_idx, debut, fin, train in occupation:
-            total_occupation += (fin - debut).total_seconds() / 60  # en minutes
+            total_occupation += (fin - debut).total_seconds() / 60
     stats["taux_occupation_global"] = round(100 * total_occupation / total_possible, 1) if total_possible else 0
 
-    # Statistiques par dépôt
+    # Compute statistics per depot
     stats_par_depot = {}
     for depot_name, depot in simulation.depots.items():
         trains_depot = [t for t in simulation.trains if t.depot == depot_name]
@@ -81,7 +92,8 @@ def calculer_statistiques_globales(simulation):
 
 def calculer_requirements(trains):
     """
-    Calcule les besoins en ressources pour les trains.
+    Compute resource requirements for trains, grouped by day.
+    Returns a dictionary: {date: count}
     """
     requirements = {}
     for train in trains:
@@ -92,7 +104,8 @@ def calculer_requirements(trains):
 
 def regrouper_requirements_par_jour(trains):
     """
-    Regroupe les requirements par jour.
+    Group requirements by day.
+    Returns a dictionary: {date: list of trains}
     """
     reqs = {}
     for train in trains:

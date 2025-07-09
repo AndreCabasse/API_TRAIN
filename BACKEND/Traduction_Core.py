@@ -262,20 +262,34 @@ TRANSLATIONS = {
 
 def get_translation(lang):
     """
-    Retourne le dictionnaire de traduction pour la langue demandée.
+    Return the translation dictionary for the requested language.
+    If the language is not found, fallback to French ("fr").
+    Args:
+        lang (str): Language code (e.g., "fr", "en", "da").
+    Returns:
+        dict: Dictionary of translations for the given language.
     """
     return TRANSLATIONS.get(lang, TRANSLATIONS["fr"])
 
 def t(key, lang, **kwargs):
     """
-    Récupère la traduction d'une clé pour une langue donnée.
-    kwargs permet d'injecter des variables dans la chaîne.
+    Retrieve the translation for a given key and language.
+    Supports string formatting with keyword arguments.
+    Args:
+        key (str): The translation key to look up.
+        lang (str): Language code (e.g., "fr", "en", "da").
+        **kwargs: Optional variables to inject into the translation string.
+    Returns:
+        str: The translated string, formatted if kwargs are provided.
+             If the key is not found, returns the key itself.
     """
     translations = get_translation(lang)
     value = translations.get(key, key)
     if kwargs:
         try:
+            # Try to format the string with provided variables
             return value.format(**kwargs)
         except Exception:
+            # If formatting fails, return the untranslated value
             return value
     return value
