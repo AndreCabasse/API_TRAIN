@@ -22,7 +22,6 @@ import {
   Checkbox,
   Grid,
   Typography,
-  //Toolbar,
   Box,
   Chip,
   IconButton,
@@ -45,7 +44,7 @@ import { trainApi } from '../services/api';
 import { Train, TrainFormData } from '../types';
 import { userApi } from '../services/userApi';
 
-// Palette de rouges harmonisée avec Dashboard
+// Harmonized red palette for consistent theming
 const redPalette = {
   main: '#D32F2F',
   light: '#FF6659',
@@ -55,6 +54,12 @@ const redPalette = {
   accent: '#FF1744'
 };
 
+/**
+ * TrainManagement component.
+ * Allows users to view, add, edit, delete, and import trains.
+ * Handles simulation reset, Excel import, and displays feedback via Snackbar.
+ * Uses MUI components for UI and supports internationalization.
+ */
 const TrainManagement: React.FC = () => {
   const { language } = useLanguage();
   const [trains, setTrains] = useState<Train[]>([]);
@@ -64,6 +69,7 @@ const TrainManagement: React.FC = () => {
   const [editingTrain, setEditingTrain] = useState<Train | null>(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
 
+  // Form state for adding/editing a train
   const [formData, setFormData] = useState<TrainFormData>({
     nom: '',
     wagons: 1,
@@ -76,7 +82,7 @@ const TrainManagement: React.FC = () => {
     locomotive_cote: 'left'
   });
 
-  // Charge la dernière sauvegarde de trains au démarrage
+  // On mount: load last simulation or fallback to current trains, and load depots
   useEffect(() => {
     const fetchLastSimulation = async () => {
       try {
@@ -88,7 +94,7 @@ const TrainManagement: React.FC = () => {
             return;
           }
         }
-        await loadTrains(); // fallback si aucune sauvegarde
+        await loadTrains(); // fallback if no saved simulation
       } catch {
         await loadTrains();
       }
@@ -98,7 +104,9 @@ const TrainManagement: React.FC = () => {
     // eslint-disable-next-line
   }, []);
 
-    // Sauvegarde la simulation côté serveur
+  /**
+   * Save the current simulation to the backend (auto-save after changes).
+   */
   const saveCurrentSimulation = async (trainsToSave: Train[]) => {
     try {
       await userApi.saveSimulation({
@@ -106,10 +114,13 @@ const TrainManagement: React.FC = () => {
         data: { trains: trainsToSave, date: new Date().toISOString() },
       });
     } catch {
-      // Optionnel : afficher une erreur
+      // Optionally show an error
     }
   };
 
+  /**
+   * Load all trains from the API.
+   */
   const loadTrains = async () => {
     try {
       setLoading(true);
@@ -122,6 +133,10 @@ const TrainManagement: React.FC = () => {
     }
   };
 
+  /**
+   * Load all depots from the API.
+   * Sets the default depot in the form if not already set.
+   */
   const loadDepots = async () => {
     try {
       const data = await trainApi.getDepots();
@@ -134,10 +149,17 @@ const TrainManagement: React.FC = () => {
     }
   };
 
+  /**
+   * Show a snackbar message (success or error).
+   */
   const showSnackbar = (message: string, severity: 'success' | 'error') => {
     setSnackbar({ open: true, message, severity });
   };
 
+  /**
+   * Open the dialog to add a new train.
+   * Resets the form to default values.
+   */
   const handleAddTrain = () => {
     setEditingTrain(null);
     setFormData({
@@ -154,6 +176,10 @@ const TrainManagement: React.FC = () => {
     setOpenDialog(true);
   };
 
+  /**
+   * Open the dialog to edit an existing train.
+   * Pre-fills the form with the train's data.
+   */
   const handleEditTrain = (train: Train) => {
     setEditingTrain(train);
     setFormData({
@@ -170,7 +196,10 @@ const TrainManagement: React.FC = () => {
     setOpenDialog(true);
   };
 
-  // Sauvegarde après suppression
+  /**
+   * Delete a train by ID, with confirmation dialog.
+   * Updates the train list and saves the new simulation.
+   */
   const handleDeleteTrain = async (trainId: number, trainName: string) => {
     if (window.confirm(`${t('delete_train_confirm', language) || 'Delete train'} "${trainName}" ?`)) {
       try {
@@ -185,7 +214,10 @@ const TrainManagement: React.FC = () => {
     }
   };
 
-  // Sauvegarde après ajout/modification
+  /**
+   * Handle form submission for adding or editing a train.
+   * Validates input, updates the backend, and refreshes the train list.
+   */
   const handleSubmit = async () => {
     if (!formData.nom || formData.wagons < 1 || formData.locomotives < 0) {
       showSnackbar(t('fill_all_fields', language) || 'Please fill all fields', 'error');
@@ -203,6 +235,7 @@ const TrainManagement: React.FC = () => {
         await trainApi.addTrain(formData);
         showSnackbar(t('train_added', language) || 'Train added', 'success');
       }
+      // Add to user history
       await userApi.addHistory({
         action: t('add_train_action', language) || 'Add train',
         train: formData.nom,
@@ -213,6 +246,7 @@ const TrainManagement: React.FC = () => {
       setTrains(updatedTrains);
       await saveCurrentSimulation(updatedTrains);
     } catch (error: any) {
+      // Handle depot conflict error with suggestions
       if (error && error.isDepotConflict && error.depots_disponibles) {
         showSnackbar(
           `${t('no_track_available', language) || 'No track available for'} ${formData.depot}.\n` +
@@ -225,6 +259,10 @@ const TrainManagement: React.FC = () => {
     }
   };
 
+  /**
+   * Handle Excel file import for trains.
+   * Accepts .xlsx, .xls, or .csv files and updates the train list.
+   */
   const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const formData = new FormData();
@@ -249,6 +287,9 @@ const TrainManagement: React.FC = () => {
     }
   };
 
+  /**
+   * Reset the simulation to its initial state, with confirmation.
+   */
   const handleResetSimulation = async () => {
     if (window.confirm(t('reset_confirm', language) || 'Are you sure you want to reset?')) {
       try {
@@ -261,6 +302,9 @@ const TrainManagement: React.FC = () => {
     }
   };
 
+  /**
+   * Get the correct locale for date pickers based on the selected language.
+   */
   const getDateLocale = () => {
     switch (language) {
       case 'en': return enUS;
@@ -269,10 +313,14 @@ const TrainManagement: React.FC = () => {
     }
   };
 
+  /**
+   * Format a date string to a readable local string (Copenhagen time).
+   */
   const formatDateTime = (dateString: string) => {
     return new Date(dateString).toLocaleString('da-DK', { timeZone: 'Europe/Copenhagen' });
   };
-  
+
+  // Debug: log train arrival dates for troubleshooting
   trains.forEach(train => {
     console.log(
       "DEBUG ARRIVEE RAW:", train.arrivee,
@@ -280,16 +328,18 @@ const TrainManagement: React.FC = () => {
       "LOCALE:", new Date(train.arrivee).toLocaleString('fr-FR')
     );
   });
+
   return (
-    
     <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={getDateLocale()}>
       <>
         <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+          {/* Header with actions: refresh, reset, import, add */}
           <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
             <Typography variant="h4" fontWeight="bold" color={redPalette.dark}>
               {t('train_list', language)}
             </Typography>
             <Box>
+              {/* Refresh trains button */}
               <Button
                 variant="outlined"
                 startIcon={<RefreshIcon />}
@@ -303,6 +353,7 @@ const TrainManagement: React.FC = () => {
               >
                 {t('refresh', language)}
               </Button>
+              {/* Reset simulation button */}
               <Button
                 variant="outlined"
                 color="error"
@@ -316,6 +367,7 @@ const TrainManagement: React.FC = () => {
               >
                 {t('reset_simulation', language)}
               </Button>
+              {/* Import Excel file button */}
               <Button
                 variant="outlined"
                 component="label"
@@ -334,6 +386,7 @@ const TrainManagement: React.FC = () => {
                   onChange={handleImportExcel}
                 />
               </Button>
+              {/* Add new train button */}
               <Button
                 variant="contained"
                 startIcon={<AddIcon />}
@@ -350,6 +403,7 @@ const TrainManagement: React.FC = () => {
             </Box>
           </Box>
 
+          {/* Loading indicator */}
           {loading && (
             <Box display="flex" justifyContent="center" alignItems="center" my={2}>
               <Typography color={redPalette.main} fontWeight="bold">
@@ -358,6 +412,7 @@ const TrainManagement: React.FC = () => {
             </Box>
           )}
 
+          {/* Main trains table */}
           <TableContainer component={Paper} sx={{
             borderRadius: 3,
             boxShadow: 4,
@@ -384,6 +439,7 @@ const TrainManagement: React.FC = () => {
                     background: train.en_attente ? redPalette.card : "#fff",
                     transition: "background 0.2s"
                   }}>
+                    {/* Train name and electric icon */}
                     <TableCell>
                       <Box display="flex" alignItems="center">
                         {train.electrique && <span style={{ marginRight: 8, color: redPalette.accent }} title={t('electric_train', language)}>⚡</span>}
@@ -396,6 +452,7 @@ const TrainManagement: React.FC = () => {
                     <TableCell>{formatDateTime(train.arrivee)}</TableCell>
                     <TableCell>{formatDateTime(train.depart)}</TableCell>
                     <TableCell>{train.depot}</TableCell>
+                    {/* Train type chip */}
                     <TableCell>
                       <Chip
                         label={t(train.type, language)}
@@ -414,6 +471,7 @@ const TrainManagement: React.FC = () => {
                         }}
                       />
                     </TableCell>
+                    {/* Status chip: waiting, placed, or track */}
                     <TableCell>
                       {train.en_attente ? (
                         <Chip label={t('waiting', language)} color="warning" size="small" sx={{ fontWeight: "bold" }} />
@@ -423,6 +481,7 @@ const TrainManagement: React.FC = () => {
                         <Chip label={t('placed', language)} color="default" size="small" />
                       )}
                     </TableCell>
+                    {/* Edit and delete actions */}
                     <TableCell>
                       <IconButton onClick={() => handleEditTrain(train)} size="small" sx={{ color: redPalette.main }}>
                         <EditIcon />
@@ -441,7 +500,7 @@ const TrainManagement: React.FC = () => {
             </Table>
           </TableContainer>
 
-          {/* Dialog pour ajouter/modifier un train */}
+          {/* Dialog for adding/editing a train */}
           <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="md" fullWidth
             PaperProps={{
               sx: {
@@ -457,6 +516,7 @@ const TrainManagement: React.FC = () => {
             </DialogTitle>
             <DialogContent>
               <Grid container spacing={2} sx={{ mt: 1 }}>
+                {/* Train name input */}
                 <Grid item xs={12} md={6}>
                   <TextField
                     fullWidth
@@ -466,6 +526,7 @@ const TrainManagement: React.FC = () => {
                     sx={{ bgcolor: "#fff" }}
                   />
                 </Grid>
+                {/* Wagons input */}
                 <Grid item xs={6} md={3}>
                   <TextField
                     fullWidth
@@ -476,6 +537,7 @@ const TrainManagement: React.FC = () => {
                     sx={{ bgcolor: "#fff" }}
                   />
                 </Grid>
+                {/* Locomotives input */}
                 <Grid item xs={6} md={3}>
                   <TextField
                     fullWidth
@@ -486,7 +548,7 @@ const TrainManagement: React.FC = () => {
                     sx={{ bgcolor: "#fff" }}
                   />
                 </Grid>
-                {/* Sépare les deux DateTimePicker sur deux lignes */}
+                {/* Arrival DateTimePicker */}
                 <Grid item xs={12} md={6}>
                   <DateTimePicker
                     label={t('arrival_time', language)}
@@ -499,6 +561,7 @@ const TrainManagement: React.FC = () => {
                     slotProps={{ textField: { fullWidth: true, sx: { bgcolor: "#fff" } } }}
                   />
                 </Grid>
+                {/* Departure DateTimePicker */}
                 <Grid item xs={12} md={6}>
                   <DateTimePicker
                     label={t('departure_time', language)}
@@ -511,6 +574,7 @@ const TrainManagement: React.FC = () => {
                     slotProps={{ textField: { fullWidth: true, sx: { bgcolor: "#fff" } } }}
                   />
                 </Grid>
+                {/* Depot selection */}
                 <Grid item xs={12} md={4}>
                   <FormControl fullWidth>
                     <InputLabel sx={{ pl: 1, bgcolor: "#fff" }}>{t('select_depot', language)}</InputLabel>
@@ -525,6 +589,7 @@ const TrainManagement: React.FC = () => {
                     </Select>
                   </FormControl>
                 </Grid>
+                {/* Train type selection */}
                 <Grid item xs={12} md={4}>
                   <FormControl fullWidth>
                     <InputLabel sx={{ pl: 1, bgcolor: "#fff" }}>{t('train_type', language)}</InputLabel>
@@ -540,6 +605,7 @@ const TrainManagement: React.FC = () => {
                     </Select>
                   </FormControl>
                 </Grid>
+                {/* Locomotive side selection (only if 1 locomotive) */}
                 {formData.locomotives === 1 && (
                   <Grid item xs={12} md={4}>
                     <FormControl fullWidth>
@@ -555,6 +621,7 @@ const TrainManagement: React.FC = () => {
                     </FormControl>
                   </Grid>
                 )}
+                {/* Electric checkbox */}
                 <Grid item xs={12}>
                   <FormControlLabel
                     control={
@@ -572,6 +639,7 @@ const TrainManagement: React.FC = () => {
                 </Grid>
               </Grid>
             </DialogContent>
+            {/* Dialog actions: cancel and submit */}
             <DialogActions sx={{ bgcolor: "#fff", borderTop: `1px solid ${redPalette.light}` }}>
               <Button onClick={() => setOpenDialog(false)} sx={{ color: redPalette.main }}>
                 {t('cancel', language)}
@@ -587,6 +655,7 @@ const TrainManagement: React.FC = () => {
             </DialogActions>
           </Dialog>
 
+          {/* Snackbar for feedback messages */}
           <Snackbar
             open={snackbar.open}
             autoHideDuration={6000}
