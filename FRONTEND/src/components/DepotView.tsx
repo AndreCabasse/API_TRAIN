@@ -95,7 +95,6 @@ const GanttChart: React.FC<{
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [plotRef, setPlotRef] = useState<any>(null);
 
   useEffect(() => {
     if (!depot) return;
@@ -221,7 +220,6 @@ const GanttChart: React.FC<{
         }}
         style={{ width: "100%", height: 440, borderRadius: 16, boxShadow: "0 2px 16px #bbb" }}
         config={{ responsive: true, displayModeBar: false }}
-        ref={(node) => setPlotRef(node)}
       />
     </Box>
   );
