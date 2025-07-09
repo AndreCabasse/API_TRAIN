@@ -20,6 +20,10 @@ import HistoryIcon from "@mui/icons-material/History";
 import { useLanguage } from "../contexts/LanguageContext";
 import { t } from "../utils/translations";
 
+/**
+ * Navigation items configuration for the side navigation bar.
+ * Each item contains an id, a translation key, and an icon.
+ */
 const navItems = [
   { id: "dashboard", labelKey: "dashboard", icon: <DashboardIcon /> },
   { id: "trains", labelKey: "trains", icon: <TrainIcon /> },
@@ -36,6 +40,13 @@ interface SideNavProps {
   onTabChange: (tab: string) => void;
 }
 
+/**
+ * SideNav component.
+ * Displays a vertical sidebar with navigation icons.
+ * Shows the label under each icon, highlights the active tab,
+ * and displays a decorative bar at the bottom.
+ * Uses translations according to the selected language.
+ */
 const SideNav: React.FC<SideNavProps> = ({ activeTab, onTabChange }) => {
   const { language } = useLanguage();
   //const theme = useTheme();
@@ -49,7 +60,7 @@ const SideNav: React.FC<SideNavProps> = ({ activeTab, onTabChange }) => {
         [`& .MuiDrawer-paper`]: {
           width: 90,
           boxSizing: "border-box",
-          marginTop: "64px",
+          marginTop: "64px", // Offset below the main header
           height: "calc(100% - 64px)",
           background: "linear-gradient(180deg,#23272F 60%, #757575 100%)",
           borderRight: "none",
@@ -59,10 +70,11 @@ const SideNav: React.FC<SideNavProps> = ({ activeTab, onTabChange }) => {
           alignItems: "center",
           py: 2,
         },
-        display: { xs: "none", md: "block" },
+        display: { xs: "none", md: "block" }, // Hide on mobile/tablet
       }}
       open
     >
+      {/* Vertical list of navigation tabs */}
       <List sx={{ width: "100%", p: 0, mt: 1 }}>
         {navItems.map((item) => (
           <Tooltip
@@ -105,6 +117,7 @@ const SideNav: React.FC<SideNavProps> = ({ activeTab, onTabChange }) => {
                 gap: 0.5,
               }}
             >
+              {/* Main icon for the tab */}
               <ListItemIcon
                 sx={{
                   minWidth: 0,
@@ -119,7 +132,7 @@ const SideNav: React.FC<SideNavProps> = ({ activeTab, onTabChange }) => {
               >
                 {item.icon}
               </ListItemIcon>
-              {/* Affiche le texte sous l'icône pour plus de clarté */}
+              {/* Label under the icon for clarity */}
               <Typography
                 variant="caption"
                 sx={{
@@ -143,7 +156,7 @@ const SideNav: React.FC<SideNavProps> = ({ activeTab, onTabChange }) => {
           </Tooltip>
         ))}
       </List>
-      {/* Bandeau décoratif bas */}
+      {/* Decorative bottom bar to recall the main color */}
       <Box
         sx={{
           mt: "auto",

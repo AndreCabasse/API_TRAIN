@@ -3,16 +3,31 @@ import { Box, Typography, Button, TextField, Paper, Alert } from "@mui/material"
 import { useUser } from "../contexts/UserContext";
 import { userApi } from "../services/userApi";
 
+/**
+ * ProfileView component.
+ * Displays the user's profile information and preferences.
+ * Allows editing and saving user preferences (as JSON).
+ * Handles error display and authentication state.
+ */
 const ProfileView: React.FC = () => {
   const { user, refreshUser } = useUser();
+  // Local state for preferences (editable JSON object)
   const [prefs, setPrefs] = useState<any>(user?.preferences || {});
+  // Edit mode toggle
   const [edit, setEdit] = useState(false);
+  // Error message state
   const [error, setError] = useState<string | null>(null);
 
+  // Update local preferences state when user changes
   useEffect(() => {
     setPrefs(user?.preferences || {});
   }, [user]);
 
+  /**
+   * Save preferences to the backend.
+   * Calls the API and refreshes user data on success.
+   * Handles and displays errors if saving fails.
+   */
   const handleSave = async () => {
     setError(null);
     try {
@@ -20,22 +35,37 @@ const ProfileView: React.FC = () => {
       await refreshUser();
       setEdit(false);
     } catch (e: any) {
-      setError(e?.response?.data?.detail || "Erreur lors de la sauvegarde");
+      setError(e?.response?.data?.detail || "Error while saving preferences");
     }
   };
 
-  if (!user) return <div>Non connecté</div>;
+  // If not authenticated, show a message
+  if (!user) return <div>Not connected</div>;
 
   return (
     <Box maxWidth={500} mx="auto" mt={4}>
       <Paper sx={{ p: 3 }}>
-        <Typography variant="h5" gutterBottom>Profil de {user.username}</Typography>
+        {/* User profile header */}
+        <Typography variant="h5" gutterBottom>
+          Profile of {user.username}
+        </Typography>
         <Typography>Email: {user.email}</Typography>
-        <Typography variant="h6" mt={2}>Préférences</Typography>
+        {/* Preferences section */}
+        <Typography variant="h6" mt={2}>
+          Preferences
+        </Typography>
+        {/* Editable JSON preferences field */}
         {edit ? (
           <TextField
             value={JSON.stringify(prefs, null, 2)}
-            onChange={e => setPrefs(JSON.parse(e.target.value))}
+            onChange={e => {
+              try {
+                setPrefs(JSON.parse(e.target.value));
+                setError(null);
+              } catch {
+                setError("Invalid JSON format");
+              }
+            }}
             multiline
             fullWidth
             minRows={4}
@@ -46,13 +76,15 @@ const ProfileView: React.FC = () => {
             {JSON.stringify(prefs, null, 2)}
           </pre>
         )}
+        {/* Error message display */}
         {error && <Alert severity="error">{error}</Alert>}
+        {/* Edit and Save/Cancel buttons */}
         <Button onClick={() => setEdit(!edit)} sx={{ mr: 2 }}>
-          {edit ? "Annuler" : "Modifier"}
+          {edit ? "Cancel" : "Edit"}
         </Button>
         {edit && (
           <Button onClick={handleSave} variant="contained">
-            Sauvegarder
+            Save
           </Button>
         )}
       </Paper>

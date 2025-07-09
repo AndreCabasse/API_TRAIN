@@ -12,7 +12,6 @@ import {
   MenuItem,
   Table,
   TableBody,
-  // Toolbar,
   TableCell,
   TableContainer,
   TableHead,
@@ -35,19 +34,24 @@ import MapIcon from '@mui/icons-material/Map';
 import FlashOnIcon from '@mui/icons-material/FlashOn';
 import TrainIcon from '@mui/icons-material/Train';
 
-// Fix pour les icônes Leaflet par défaut (utilisation des URLs CDN)
+// Fix for default Leaflet marker icons (using CDN URLs)
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
   iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
+// Depot interface for type safety
 interface Depot {
   depot: string;
   lat: number;
   lon: number;
 }
 
+/**
+ * Component to animate the map view to a given position.
+ * Used to center the map on a selected depot.
+ */
 const FlyToDepot: React.FC<{ position: [number, number] }> = ({ position }) => {
   const map = useMap();
   React.useEffect(() => {
@@ -56,20 +60,29 @@ const FlyToDepot: React.FC<{ position: [number, number] }> = ({ position }) => {
   return null;
 };
 
-// Fonction utilitaire pour placer les trains en cercle autour du dépôt
+/**
+ * Utility function to arrange trains in a circle around the depot marker.
+ * This prevents marker overlap when multiple trains are at the same depot.
+ */
 function getTrainPosition(
   depotLat: number,
   depotLon: number,
   index: number,
   total: number
 ): [number, number] {
-  const radius = 0.01; // ~1km
+  const radius = 0.01; // ~1km radius for train markers
   const angle = (2 * Math.PI * index) / total;
   const lat = depotLat + radius * Math.cos(angle);
   const lon = depotLon + radius * Math.sin(angle);
   return [lat, lon];
 }
 
+/**
+ * Main MapView component.
+ * Displays a map with depot locations and train positions.
+ * Allows switching between a single depot view and a global view of all trains.
+ * Shows depot and train details, and provides a legend for map symbols.
+ */
 const MapView: React.FC = () => {
   const { language } = useLanguage();
   const [depots, setDepots] = useState<Depot[]>([]);
@@ -77,14 +90,16 @@ const MapView: React.FC = () => {
   const [depotInfo, setDepotInfo] = useState<any>(null);
   const [allTrains, setAllTrains] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [mapKey, setMapKey] = useState(0);
-  const [showAll, setShowAll] = useState(false);
+  const [mapKey, setMapKey] = useState(0); // Used to force map rerender
+  const [showAll, setShowAll] = useState(false); // Toggle between single depot and global view
 
+  // Load depot list on mount
   useEffect(() => {
     loadDepots();
     // eslint-disable-next-line
   }, []);
 
+  // Load info for selected depot when changed (unless in global view)
   useEffect(() => {
     if (selectedDepot && !showAll) {
       loadDepotInfo(selectedDepot);
@@ -92,6 +107,7 @@ const MapView: React.FC = () => {
     // eslint-disable-next-line
   }, [selectedDepot, showAll]);
 
+  // Load all trains for all depots when switching to global view
   useEffect(() => {
     if (showAll) {
       loadAllTrains();
@@ -99,6 +115,10 @@ const MapView: React.FC = () => {
     // eslint-disable-next-line
   }, [showAll]);
 
+  /**
+   * Fetch the list of depots from the API.
+   * Sets the first depot as selected by default.
+   */
   const loadDepots = async () => {
     try {
       setLoading(true);
@@ -108,25 +128,31 @@ const MapView: React.FC = () => {
         setSelectedDepot(data[0].depot);
       }
     } catch (error) {
-      console.error('Erreur lors du chargement des dépôts:', error);
+      console.error('Error loading depots:', error);
     } finally {
       setLoading(false);
     }
   };
 
+  /**
+   * Fetch detailed info for a specific depot, including its trains.
+   */
   const loadDepotInfo = async (depotName: string) => {
     try {
       setLoading(true);
       const info = await trainApi.getDepotInfo(depotName);
       setDepotInfo(info);
     } catch (error) {
-      console.error('Erreur lors du chargement des infos du dépôt:', error);
+      console.error('Error loading depot info:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  // Charge tous les trains de tous les dépôts pour l'affichage global
+  /**
+   * Fetch all trains for all depots for the global map view.
+   * Each train is associated with its depot's coordinates.
+   */
   const loadAllTrains = async () => {
     try {
       setLoading(true);
@@ -148,12 +174,13 @@ const MapView: React.FC = () => {
       }
       setAllTrains(allTrainsArr);
     } catch (error) {
-      console.error('Erreur lors du chargement de tous les trains:', error);
+      console.error('Error loading all trains:', error);
     } finally {
       setLoading(false);
     }
   };
 
+  // Show loading spinner while fetching data
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight={400}>
@@ -161,19 +188,22 @@ const MapView: React.FC = () => {
       </Box>
     );
   }
-  if (!depots.length) return <div>Aucun dépôt géolocalisé</div>;
+  // Show message if no depots are available
+  if (!depots.length) return <div>No geolocated depot found</div>;
 
+  // Compute the map center as the average of all depot coordinates
   const center = [
     depots.reduce((sum, d) => sum + d.lat, 0) / depots.length,
     depots.reduce((sum, d) => sum + d.lon, 0) / depots.length,
   ] as [number, number];
 
+  // Find the selected depot object for coordinates
   const selectedDepotObj = depots.find((d) => d.depot === selectedDepot);
   const selectedPosition: [number, number] = selectedDepotObj
     ? [selectedDepotObj.lat, selectedDepotObj.lon]
     : center;
 
-  // Icônes personnalisées pour les trains
+  // Custom icons for train and depot markers
   const electricTrainIcon = new L.Icon({
     iconUrl: '/Train.png',
     iconSize: [20, 20],
@@ -186,11 +216,11 @@ const MapView: React.FC = () => {
     iconAnchor: [16, 32],
     className: 'diesel-train-icon'
   });
-  // Icône personnalisée BLEUE et plus grande pour les dépôts
+  // Custom blue, larger icon for depots
   const depotIcon = new L.Icon({
-    iconUrl: '/building.svg', // Place ton SVG ou PNG dans le dossier public/
-    iconSize: [38, 38],    // Ajuste la taille selon ton image
-    iconAnchor: [19, 38],  // Centre l’icône sur la pointe
+    iconUrl: '/building.svg', // Place your SVG or PNG in the public/ folder
+    iconSize: [38, 38],
+    iconAnchor: [19, 38],
     className: 'depot-marker-custom',
   });
 
@@ -202,43 +232,48 @@ const MapView: React.FC = () => {
           gutterBottom
           sx={{ color: red[700], fontWeight: 700 }}
         >
-          {t('depot_map', language) || "Carte des dépôts"}
+          {t('depot_map', language) || "Depot map"}
         </Typography>
 
-        {/* Légende */}
+        {/* Legend for map symbols */}
         <Box mb={2}>
           <Card sx={{ p: 1.5, borderRadius: 2, background: red[50], display: 'inline-block', boxShadow: 1 }}>
             <Stack direction="row" spacing={3} alignItems="center">
+              {/* Depot legend */}
               <Box display="flex" alignItems="center" gap={1}>
                 <TrainIcon sx={{ color: blue[700], fontSize: 28 }} />
-                <Typography variant="body2">{t('depots', language) || "Dépôt"}</Typography>
+                <Typography variant="body2">{t('depots', language) || "Depot"}</Typography>
               </Box>
+              {/* Train legend */}
               <Box display="flex" alignItems="center" gap={1}>
                 <img src="/Train.png" alt="Train" width={22} style={{ filter: 'grayscale(0%)' }} />
                 <Typography variant="body2">{t('trains', language) || "Train"}</Typography>
               </Box>
+              {/* Electric train legend */}
               <Box display="flex" alignItems="center" gap={1}>
                 <FlashOnIcon sx={{ color: red[400], fontSize: 20 }} />
-                <Typography variant="body2">{t('electric_train_short', language) || "Électrique"}</Typography>
+                <Typography variant="body2">{t('electric_train_short', language) || "Electric"}</Typography>
               </Box>
+              {/* Waiting train legend */}
               <Box display="flex" alignItems="center" gap={1}>
-                <Chip size="small" label={t('waiting', language) || "En attente"} sx={{ background: red[100], color: red[700] }} />
-                <Typography variant="body2">{t('waiting', language) || "En attente"}</Typography>
+                <Chip size="small" label={t('waiting', language) || "Waiting"} sx={{ background: red[100], color: red[700] }} />
+                <Typography variant="body2">{t('waiting', language) || "Waiting"}</Typography>
               </Box>
+              {/* Placed train legend */}
               <Box display="flex" alignItems="center" gap={1}>
-                <Chip size="small" label={t('placed', language) || "En place"} sx={{ background: red[200], color: red[900] }} />
-                <Typography variant="body2">{t('placed', language) || "En place"}</Typography>
+                <Chip size="small" label={t('placed', language) || "Placed"} sx={{ background: red[200], color: red[900] }} />
+                <Typography variant="body2">{t('placed', language) || "Placed"}</Typography>
               </Box>
             </Stack>
           </Card>
         </Box>
 
         <Box display="flex" gap={3} flexDirection={{ xs: 'column', md: 'row' }}>
-          {/* Carte */}
+          {/* Map section */}
           <Box flex={2} minWidth={0} sx={{ position: 'relative' }}>
-            {/* Boutons de recentrage et vue globale */}
+            {/* Buttons for recentering and toggling global view */}
             <Box sx={{ position: 'absolute', top: 16, right: 16, zIndex: 1000, display: 'flex', gap: 1 }}>
-              <Tooltip title={t('center_on_depot', language) || "Recentrer sur le dépôt"}>
+              <Tooltip title={t('center_on_depot', language) || "Center on depot"}>
                 <IconButton
                   sx={{
                     background: red[100],
@@ -251,7 +286,7 @@ const MapView: React.FC = () => {
                   <CenterFocusStrongIcon />
                 </IconButton>
               </Tooltip>
-              <Tooltip title={t('show_all_trains', language) || "Voir tous les trains"}>
+              <Tooltip title={t('show_all_trains', language) || "Show all trains"}>
                 <IconButton
                   sx={{
                     background: showAll ? red[200] : red[50],
@@ -284,12 +319,13 @@ const MapView: React.FC = () => {
                     boxShadow: '0 4px 24px rgba(200,0,0,0.08)',
                   }}
                 >
-                  {/* FlyTo sur le dépôt sélectionné */}
+                  {/* Animate map to selected depot */}
                   {!showAll && selectedDepot && (
                     <FlyToDepot position={selectedPosition} />
                   )}
+                  {/* OpenStreetMap tile layer */}
                   <TileLayer url="https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png" />
-                  {/* Dépôts en BLEU et plus gros */}
+                  {/* Render depot markers (large blue icons) */}
                   {depots.map((depot) => (
                     <Marker
                       key={depot.depot}
@@ -305,9 +341,10 @@ const MapView: React.FC = () => {
                       </Popup>
                     </Marker>
                   ))}
-                  {/* Affichage de tous les trains en même temps si showAll */}
+                  {/* Show all trains on the map if global view is enabled */}
                   {showAll
                     ? allTrains.map((train, idx) => {
+                        // Compute train marker position (circle around depot if no lat/lon)
                         const position: [number, number] =
                           train.lat && train.lon
                             ? [train.lat, train.lon]
@@ -344,6 +381,7 @@ const MapView: React.FC = () => {
                           </Marker>
                         );
                       })
+                    // Show only trains for the selected depot
                     : depotInfo && selectedDepotObj && depotInfo.trains && depotInfo.trains.length > 0 &&
                       depotInfo.trains.map((train: any, idx: number) => {
                         const position: [number, number] =
@@ -385,7 +423,7 @@ const MapView: React.FC = () => {
             </Card>
           </Box>
 
-          {/* Informations du dépôt */}
+          {/* Depot information panel (hidden in global view) */}
           {!showAll && (
             <Box flex={1} minWidth={320}>
               <Card
@@ -396,6 +434,7 @@ const MapView: React.FC = () => {
                 }}
               >
                 <CardContent sx={{ background: red[50] }}>
+                  {/* Depot selection dropdown */}
                   <FormControl fullWidth sx={{ mb: 2 }}>
                     <InputLabel
                       sx={{
@@ -406,7 +445,7 @@ const MapView: React.FC = () => {
                         mt: '-1px',
                       }}
                     >
-                      {t('select_depot', language) || "Sélectionner un dépôt"}
+                      {t('select_depot', language) || "Select a depot"}
                     </InputLabel>
                     <Select
                       value={selectedDepot}
@@ -424,6 +463,7 @@ const MapView: React.FC = () => {
                     </Select>
                   </FormControl>
 
+                  {/* Depot details and train list */}
                   {depotInfo && (
                     <>
                       <Typography
@@ -449,6 +489,7 @@ const MapView: React.FC = () => {
                         {t('trains', language) || "Trains"} ({depotInfo.trains.length})
                       </Typography>
 
+                      {/* Table of trains in the depot */}
                       {depotInfo.trains.length > 0 ? (
                         <TableContainer
                           component={Paper}
@@ -458,13 +499,13 @@ const MapView: React.FC = () => {
                             <TableHead>
                               <TableRow sx={{ background: red[100] }}>
                                 <TableCell sx={{ color: red[700], fontWeight: 700 }}>
-                                  {t('train_name', language) || "Nom"}
+                                  {t('train_name', language) || "Name"}
                                 </TableCell>
                                 <TableCell sx={{ color: red[700], fontWeight: 700 }}>
                                   {t('train_type', language) || "Type"}
                                 </TableCell>
                                 <TableCell sx={{ color: red[700], fontWeight: 700 }}>
-                                  {t('track', language) || "Voie"}
+                                  {t('track', language) || "Track"}
                                 </TableCell>
                               </TableRow>
                             </TableHead>
@@ -472,10 +513,12 @@ const MapView: React.FC = () => {
                               {depotInfo.trains.map((train: any) => (
                                 <TableRow key={train.id} hover>
                                   <TableCell>
+                                    {/* Electric icon if train is electric */}
                                     {train.electrique && (
                                       <span style={{ marginRight: 4 }}>⚡</span>
                                     )}
                                     {train.nom}
+                                    {/* Status chip: waiting or placed */}
                                     <Chip
                                       label={
                                         train.en_attente
@@ -510,7 +553,7 @@ const MapView: React.FC = () => {
                       ) : (
                         <Typography color="textSecondary">
                           {t('no_trains_in_depot', language) ||
-                            "Aucun train dans ce dépôt"}
+                            "No trains in this depot"}
                         </Typography>
                       )}
                     </>
