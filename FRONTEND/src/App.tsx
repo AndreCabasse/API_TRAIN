@@ -17,6 +17,7 @@ import LoginRegister from "./components/LoginRegister";
 import HistoryView from "./components/HistoryView";
 import Box from '@mui/material/Box';
 
+// Define the main theme for the application using Material-UI
 const theme = createTheme({
   palette: {
     primary: {
@@ -31,12 +32,15 @@ const theme = createTheme({
   },
 });
 
+// MainApp handles the core logic and layout of the application
 function MainApp() {
+  // State to track the currently active tab/view
   const [activeTab, setActiveTab] = useState("dashboard");
+  // Get the current user from context
   const { user } = useUser();
 
+  // If the user is not logged in, show the login/register form
   if (!user) {
-    // Affiche le formulaire de connexion/inscription si non connecté
     return (
       <ThemeProvider theme={theme}>
         <CssBaseline />
@@ -45,6 +49,7 @@ function MainApp() {
     );
   }
 
+  // Render the main content based on the selected tab
   const renderContent = () => {
     switch (activeTab) {
       case "dashboard":
@@ -70,40 +75,44 @@ function MainApp() {
     }
   };
 
-return (
+  // Main layout: header, side navigation, and main content area
+  return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
+      {/* Top navigation bar with tab selection */}
       <Header activeTab={activeTab} onTabChange={setActiveTab} />
       <Box sx={{ display: "flex" }}>
+        {/* Side navigation menu */}
         <SideNav activeTab={activeTab} onTabChange={setActiveTab} />
+        {/* Main content area with background image and opacity overlay */}
         <Box
           sx={{
             flexGrow: 1,
             marginTop: 8,
             p: 2,
             minHeight: "100vh",
-            position: "relative", // Ajouté
-            overflow: "hidden",   // Ajouté
-            backgroundImage: 'url("/FOND_DSB.jpg")',
+            position: "relative", // Needed for overlay positioning
+            overflow: "hidden",
+            backgroundImage: 'url("/FOND_DSB.jpg")', // Background image for the app
             backgroundSize: "cover",
             backgroundRepeat: "no-repeat",
             backgroundPosition: "center",
             transition: "background-image 0.3s",
           }}
         >
-          {/* Overlay d'opacité */}
+          {/* Semi-transparent white overlay for readability */}
           <Box
             sx={{
               position: "absolute",
               inset: 0,
               width: "100%",
               height: "100%",
-              bgcolor: "rgba(255,255,255,0.65)", // Opacité blanche, ajuste la valeur si besoin
+              bgcolor: "rgba(255,255,255,0.65)", // White opacity overlay
               zIndex: 0,
-              pointerEvents: "none",
+              pointerEvents: "none", // Allow clicks to pass through
             }}
           />
-          {/* Contenu au-dessus de l'overlay */}
+          {/* Main content rendered above the overlay */}
           <Box sx={{ position: "relative", zIndex: 1 }}>
             {renderContent()}
           </Box>
@@ -113,6 +122,7 @@ return (
   );
 }
 
+// App wraps MainApp with user and language context providers
 function App() {
   return (
     <UserProvider>

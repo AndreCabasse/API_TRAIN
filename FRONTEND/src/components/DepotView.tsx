@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Container, Grid, Typography, Box, FormControl, InputLabel, Select, MenuItem, CircularProgress, Paper, Stack, Chip, Button, Tooltip, TextField
 } from '@mui/material';
@@ -89,8 +89,8 @@ const GanttChart: React.FC<{
   depot: string,
   startDate: string,
   endDate: string,
-  onExport?: () => void
-}> = ({ depot, startDate, endDate, onExport }) => {
+  refDiv?: React.RefObject<HTMLDivElement>
+}> = ({ depot, startDate, endDate, refDiv }) => {
   const { language } = useLanguage();
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -164,37 +164,22 @@ const GanttChart: React.FC<{
     showlegend: false,
   }));
 
-  // Export du diagramme
-  const handleExport = () => {
-    if (plotRef && plotRef.downloadImage) {
-      plotRef.downloadImage({format: 'png', filename: `gantt_${depot}`});
-    }
-    if (onExport) onExport();
-  };
-
   // Ajout des barres verticales de semaine
-const { shapes: weekShapes, annotations: weekAnnotations } = getWeekLinesAndAnnotations(startDate, endDate);
+  const { shapes: weekShapes, annotations: weekAnnotations } = getWeekLinesAndAnnotations(startDate, endDate);
 
   return (
-    <Box sx={{
-      position: 'relative',
-      bgcolor: "rgba(255,255,255,0.95)",
-      borderRadius: 5,
-      boxShadow: 6,
-      p: 2,
-      mb: 3,
-      transition: 'box-shadow 0.2s',
-      '&:hover': { boxShadow: 12 }
-    }}>
-      <Button
-        variant="contained"
-        color="primary"
-        startIcon={<DownloadIcon />}
-        sx={{ position: 'absolute', top: 16, right: 16, zIndex: 2 }}
-        onClick={handleExport}
-      >
-        {t('export_diagram', language) || "Exporter"}
-      </Button>
+    <Box
+      ref={refDiv}
+      sx={{
+        position: 'relative',
+        bgcolor: "rgba(255,255,255,0.95)",
+        borderRadius: 5,
+        boxShadow: 6,
+        p: 2,
+        mb: 3,
+        transition: 'box-shadow 0.2s',
+        '&:hover': { boxShadow: 12 }
+      }}>
       <Plot
         data={plotData as any}
         layout={{
@@ -244,21 +229,23 @@ const { shapes: weekShapes, annotations: weekAnnotations } = getWeekLinesAndAnno
 // ----------- End GanttChart -----------
 
 // ----------- Timeline moderne avec @mui/lab -----------
-const ModernTimeline: React.FC<{ trains: Train[] }> = ({ trains }) => {
+const ModernTimeline: React.FC<{ trains: Train[], refDiv?: React.RefObject<HTMLDivElement> }> = ({ trains, refDiv }) => {
   const { language } = useLanguage();
   if (!trains.length) return null;
   // Tri par date d'arrivée
   const sorted = [...trains].sort((a, b) => new Date(a.arrivee).getTime() - new Date(b.arrivee).getTime());
   return (
-    <Paper sx={{
-      p: 2,
-      borderRadius: 5,
-      bgcolor: "rgba(255,255,255,0.95)",
-      mb: 3,
-      boxShadow: 4,
-      transition: 'box-shadow 0.2s',
-      '&:hover': { boxShadow: 10 }
-    }}>
+    <Paper
+      ref={refDiv}
+      sx={{
+        p: 2,
+        borderRadius: 5,
+        bgcolor: "rgba(255,255,255,0.95)",
+        mb: 3,
+        boxShadow: 4,
+        transition: 'box-shadow 0.2s',
+        '&:hover': { boxShadow: 10 }
+      }}>
       <Typography variant="h6" gutterBottom color={redPalette.main}>
         {t('timeline_arrivals', language) || "Arrivées prochaines"}
       </Typography>
@@ -299,6 +286,55 @@ const ModernTimeline: React.FC<{ trains: Train[] }> = ({ trains }) => {
   );
 };
 // ----------- End Timeline -----------
+
+// ----------- Liste détaillée des trains (entrées/sorties) -----------
+const TrainListTable: React.FC<{ trains: Train[], refDiv?: React.RefObject<HTMLDivElement> }> = ({ trains, refDiv }) => {
+  const { language } = useLanguage();
+  if (!trains.length) return null;
+  const sorted = [...trains].sort((a, b) => new Date(a.arrivee).getTime() - new Date(b.arrivee).getTime());
+  return (
+    <Box
+      ref={refDiv}
+      sx={{
+        p: 2,
+        borderRadius: 3,
+        bgcolor: "rgba(255,255,255,0.98)",
+        boxShadow: 2,
+        mb: 3,
+        mt: 2,
+      }}
+    >
+      <Typography variant="h6" gutterBottom color={redPalette.dark}>
+        {t('detailed_train_list', language) || "Liste détaillée des trains"}
+      </Typography>
+      <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse', fontSize: 15 }}>
+        <thead>
+          <tr>
+            <th style={{ borderBottom: '1px solid #ccc', padding: 6 }}>{t('train', language) || "Train"}</th>
+            <th style={{ borderBottom: '1px solid #ccc', padding: 6 }}>{t('type', language) || "Type"}</th>
+            <th style={{ borderBottom: '1px solid #ccc', padding: 6 }}>{t('arrival', language) || "Arrivée"}</th>
+            <th style={{ borderBottom: '1px solid #ccc', padding: 6 }}>{t('departure', language) || "Départ"}</th>
+            <th style={{ borderBottom: '1px solid #ccc', padding: 6 }}>{t('track', language) || "Voie"}</th>
+            <th style={{ borderBottom: '1px solid #ccc', padding: 6 }}>{t('length', language) || "Longueur"}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {sorted.map(train => (
+            <tr key={train.id}>
+              <td style={{ padding: 6, borderBottom: '1px solid #eee', fontWeight: 500 }}>{train.nom}</td>
+              <td style={{ padding: 6, borderBottom: '1px solid #eee', color: getColorForType(train.type) }}>{t(train.type, language)}</td>
+              <td style={{ padding: 6, borderBottom: '1px solid #eee' }}>{dayjs(train.arrivee).format('DD/MM/YYYY HH:mm')}</td>
+              <td style={{ padding: 6, borderBottom: '1px solid #eee' }}>{dayjs(train.depart).format('DD/MM/YYYY HH:mm')}</td>
+              <td style={{ padding: 6, borderBottom: '1px solid #eee' }}>{train.voie || '-'}</td>
+              <td style={{ padding: 6, borderBottom: '1px solid #eee' }}>{train.longueur ? `${train.longueur} m` : '-'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </Box>
+    </Box>
+  );
+};
+// ----------- End Liste détaillée -----------
 
 // Nouveau StatCard plus grand et vertical
 const StatCard = ({
@@ -381,6 +417,11 @@ const DepotView: React.FC = () => {
   const [startDate, setStartDate] = useState<string>(dayjs().subtract(1, 'day').format('YYYY-MM-DDTHH:mm'));
   const [endDate, setEndDate] = useState<string>(dayjs().add(2, 'day').format('YYYY-MM-DDTHH:mm'));
 
+  // Refs pour export PDF
+  const ganttRef = useRef<HTMLDivElement>(null);
+  const timelineRef = useRef<HTMLDivElement>(null);
+  const trainListRef = useRef<HTMLDivElement>(null);
+
   // Chargement des dépôts
   useEffect(() => {
     trainApi.getDepots()
@@ -420,6 +461,56 @@ const DepotView: React.FC = () => {
     setEndDate(maxDepart.add(2, 'day').format('YYYY-MM-DDTHH:mm'));
   };
 
+  // ----------- Export PDF Gantt + Timeline + Liste détaillée -----------
+  const handleExportPDF = async () => {
+    const jsPDF = (await import('jspdf')).default;
+    const html2canvas = (await import('html2canvas')).default;
+    const doc = new jsPDF({
+      orientation: 'landscape',
+      unit: 'pt',
+      format: 'a4'
+    });
+
+    // Gantt
+    if (ganttRef.current) {
+      const ganttCanvas = await html2canvas(ganttRef.current, { backgroundColor: null, scale: 2 });
+      const imgData = ganttCanvas.toDataURL('image/png');
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const imgProps = doc.getImageProperties(imgData);
+      const imgHeight = (imgProps.height * (pageWidth - 40)) / imgProps.width;
+      doc.addImage(imgData, 'PNG', 20, 20, pageWidth - 40, imgHeight);
+      let y = imgHeight + 40;
+
+      // Timeline
+      if (timelineRef.current) {
+        const timelineCanvas = await html2canvas(timelineRef.current, { backgroundColor: null, scale: 2 });
+        const timelineImg = timelineCanvas.toDataURL('image/png');
+        const timelineProps = doc.getImageProperties(timelineImg);
+        const timelineHeight = (timelineProps.height * (pageWidth - 40)) / timelineProps.width;
+        if (y + timelineHeight > doc.internal.pageSize.getHeight()) {
+          doc.addPage();
+          y = 20;
+        }
+        doc.addImage(timelineImg, 'PNG', 20, y, pageWidth - 40, timelineHeight);
+        y += timelineHeight + 20;
+      }
+
+      // Liste détaillée
+      if (trainListRef.current) {
+        const trainListCanvas = await html2canvas(trainListRef.current, { backgroundColor: null, scale: 2 });
+        const trainListImg = trainListCanvas.toDataURL('image/png');
+        const trainListProps = doc.getImageProperties(trainListImg);
+        const trainListHeight = (trainListProps.height * (pageWidth - 40)) / trainListProps.width;
+        if (y + trainListHeight > doc.internal.pageSize.getHeight()) {
+          doc.addPage();
+          y = 20;
+        }
+        doc.addImage(trainListImg, 'PNG', 20, y, pageWidth - 40, trainListHeight);
+      }
+      doc.save(`depot_${selectedDepot}_gantt.pdf`);
+    }
+  };
+
   return (
     <>
       <Container
@@ -437,6 +528,18 @@ const DepotView: React.FC = () => {
           justifyContent: 'flex-start',
         }}
       >
+        {selectedDepot && (
+          <Box display="flex" justifyContent="flex-end" mb={2}>
+            <Button
+              variant="contained"
+              color="secondary"
+              startIcon={<DownloadIcon />}
+              onClick={handleExportPDF}
+            >
+              Exporter PDF
+            </Button>
+          </Box>
+        )}
         <Box
           display="flex"
           justifyContent="space-between"
@@ -522,11 +625,15 @@ const DepotView: React.FC = () => {
           <Grid container spacing={3}>
             {/* Gantt uniquement */}
             <Grid item xs={12}>
-              <GanttChart depot={selectedDepot} startDate={startDate} endDate={endDate} />
+              <GanttChart depot={selectedDepot} startDate={startDate} endDate={endDate} refDiv={ganttRef} />
             </Grid>
             {/* Timeline moderne */}
             <Grid item xs={12}>
-              <ModernTimeline trains={depotTrains} />
+              <ModernTimeline trains={depotTrains} refDiv={timelineRef} />
+            </Grid>
+            {/* Liste détaillée des trains */}
+            <Grid item xs={12}>
+              <TrainListTable trains={depotTrains} refDiv={trainListRef} />
             </Grid>
             {/* Statistiques du dépôt avec icônes */}
             <Grid item xs={12} md={6}>
