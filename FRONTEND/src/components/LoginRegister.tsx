@@ -7,17 +7,24 @@ import { t } from "../utils/translations";
 import bgImage from "../assets/FOND_DSB.jpg";
 import dsbLogo from "../assets/DSB1.png";
 
+/**
+ * LoginRegister component.
+ * Handles user authentication (login/register) with language selection.
+ * Displays error messages and uses a styled left panel for the form.
+ */
 const LoginRegister: React.FC = () => {
   const { refreshUser } = useUser();
   const { language, setLanguage } = useLanguage();
-  const [tab, setTab] = useState(0);
+  const [tab, setTab] = useState(0); // 0 = login, 1 = register
   const [form, setForm] = useState({ username: "", email: "", password: "" });
   const [error, setError] = useState<string | null>(null);
 
+  // Handle input changes for form fields
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  // Handle login action
   const handleLogin = async () => {
     setError(null);
     try {
@@ -28,6 +35,7 @@ const LoginRegister: React.FC = () => {
     }
   };
 
+  // Handle registration action
   const handleRegister = async () => {
     setError(null);
     try {
@@ -52,7 +60,7 @@ const LoginRegister: React.FC = () => {
         backgroundRepeat: "no-repeat",
       }}
     >
-      {/* Bandeau vertical à gauche pour le login/register */}
+      {/* Left vertical panel for login/register */}
       <Box
         sx={{
           width: { xs: "100vw", sm: 420 },
@@ -73,8 +81,7 @@ const LoginRegister: React.FC = () => {
           borderRight: "1.5px solid rgba(255,255,255,0.18)",
         }}
       >
-        {/* Effet décoratif de bulles/flou */}
-        {/* Léger effet de halo blanc pour la profondeur */}
+        {/* Decorative blurred bubbles */}
         <Box sx={{
           position: "absolute",
           top: -60,
@@ -97,6 +104,7 @@ const LoginRegister: React.FC = () => {
           filter: "blur(14px)",
           zIndex: 0,
         }} />
+        {/* Language selector */}
         <Box display="flex" justifyContent="flex-end" width="100%" mb={1} pr={2} zIndex={1}>
           <FormControl size="small" sx={{ minWidth: 110 }}>
             <InputLabel id="lang-select-label" sx={{ color: "#fff" }}>{t("language", language)}</InputLabel>
@@ -105,9 +113,12 @@ const LoginRegister: React.FC = () => {
               value={language}
               label={t("language", language)}
               onChange={e => setLanguage(e.target.value as any)}
-              sx={{ color: "#fff", '.MuiOutlinedInput-notchedOutline': { borderColor: '#fff' },
+              sx={{
+                color: "#fff",
+                '.MuiOutlinedInput-notchedOutline': { borderColor: '#fff' },
                 '.MuiSvgIcon-root': { color: '#fff' },
-                '& .MuiInputLabel-root': { color: '#fff' } }}
+                '& .MuiInputLabel-root': { color: '#fff' }
+              }}
             >
               <MenuItem value="fr">Français</MenuItem>
               <MenuItem value="en">English</MenuItem>
@@ -115,18 +126,22 @@ const LoginRegister: React.FC = () => {
             </Select>
           </FormControl>
         </Box>
-        {/* Logo DSB centré */}
+        {/* Centered DSB logo */}
         <Box sx={{ width: 110, height: 110, mb: 1.5, mt: -2, zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <img src={dsbLogo} alt="DSB logo" style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.18))' }} />
         </Box>
         <Typography variant="h4" align="center" sx={{ mb: 2, fontWeight: 800, letterSpacing: 1, color: "#fff", zIndex: 1, textShadow: "0 2px 8px rgba(0,0,0,0.22)" }}>
           {t("welcome_title", language)}
         </Typography>
+        {/* Tabs for switching between login and register */}
         <Tabs
           value={tab}
           onChange={(_, v) => setTab(v)}
           centered
-          sx={{ mb: 2, width: "100%", zIndex: 1,
+          sx={{
+            mb: 2,
+            width: "100%",
+            zIndex: 1,
             '& .MuiTab-root': { color: '#e3e3e3', fontWeight: 600 },
             '& .Mui-selected': { color: '#fff' },
             '& .MuiTabs-indicator': { background: '#fff' },
@@ -135,6 +150,7 @@ const LoginRegister: React.FC = () => {
           <Tab label={t("login_tab", language)} sx={{ width: "50%" }} />
           <Tab label={t("register_tab", language)} sx={{ width: "50%" }} />
         </Tabs>
+        {/* Form fields */}
         <Box mt={1} width="85%" zIndex={1}>
           <TextField
             label={t("username", language)}
@@ -142,7 +158,10 @@ const LoginRegister: React.FC = () => {
             value={form.username}
             onChange={handleChange}
             fullWidth
-            sx={{ mb: 2, borderRadius: 2, background: "rgba(30,30,40,0.85)",
+            sx={{
+              mb: 2,
+              borderRadius: 2,
+              background: "rgba(30,30,40,0.85)",
               input: { color: '#ffe082' },
               label: { color: '#ffe082', fontWeight: 700, textShadow: '0 1px 8px rgba(0,0,0,0.45)' },
               '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.18)' },
@@ -157,7 +176,10 @@ const LoginRegister: React.FC = () => {
               value={form.email}
               onChange={handleChange}
               fullWidth
-              sx={{ mb: 2, borderRadius: 2, background: "rgba(30,30,40,0.85)",
+              sx={{
+                mb: 2,
+                borderRadius: 2,
+                background: "rgba(30,30,40,0.85)",
                 input: { color: '#ffe082' },
                 label: { color: '#ffe082', fontWeight: 700, textShadow: '0 1px 8px rgba(0,0,0,0.45)' },
                 '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.18)' },
@@ -173,7 +195,10 @@ const LoginRegister: React.FC = () => {
             value={form.password}
             onChange={handleChange}
             fullWidth
-            sx={{ mb: 2, borderRadius: 2, background: "rgba(30,30,40,0.85)",
+            sx={{
+              mb: 2,
+              borderRadius: 2,
+              background: "rgba(30,30,40,0.85)",
               input: { color: '#ffe082' },
               label: { color: '#ffe082', fontWeight: 700, textShadow: '0 1px 8px rgba(0,0,0,0.45)' },
               '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.18)' },
@@ -181,19 +206,30 @@ const LoginRegister: React.FC = () => {
             InputLabelProps={{ style: { color: '#ffe082', fontWeight: 700, textShadow: '0 1px 8px rgba(0,0,0,0.45)' } }}
             autoComplete={tab === 0 ? "current-password" : "new-password"}
           />
+          {/* Error message display */}
           {error && <Alert severity="error" sx={{ mb: 1, background: 'rgba(255,0,0,0.13)', color: '#fff', fontWeight: 600 }}>{error}</Alert>}
           <Button
             variant="contained"
             color="error"
             fullWidth
             onClick={tab === 0 ? handleLogin : handleRegister}
-            sx={{ mt: 1, py: 1.2, fontWeight: 700, fontSize: "1.1rem", borderRadius: 2, boxShadow: 2, background: 'linear-gradient(90deg,#d32f2f,#ff1744)', color: '#fff', backdropFilter: 'blur(2px)' }}
+            sx={{
+              mt: 1,
+              py: 1.2,
+              fontWeight: 700,
+              fontSize: "1.1rem",
+              borderRadius: 2,
+              boxShadow: 2,
+              background: 'linear-gradient(90deg,#d32f2f,#ff1744)',
+              color: '#fff',
+              backdropFilter: 'blur(2px)'
+            }}
           >
             {tab === 0 ? t("login_button", language) : t("register_button", language)}
           </Button>
         </Box>
       </Box>
-      {/* Partie droite vide, laisse voir le fond */}
+      {/* Right part left empty, shows background image */}
       <Box sx={{ flex: 1, display: { xs: "none", sm: "block" } }} />
     </Box>
   );

@@ -15,12 +15,19 @@ import {
 import DeleteIcon from "@mui/icons-material/Delete";
 import { userApi } from "../services/userApi";
 
+/**
+ * HistoryView component.
+ * Displays user action history and simulation saves.
+ * Allows adding, deleting, and viewing details for both.
+ * Handles authentication state and error display.
+ */
 const HistoryView: React.FC = () => {
   const [history, setHistory] = useState<any[]>([]);
   const [simulations, setSimulations] = useState<any[]>([]);
   const [notConnected, setNotConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // On mount, check authentication and fetch history/simulations
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -35,30 +42,34 @@ const HistoryView: React.FC = () => {
       .then(setHistory)
       .catch((e: any) => {
         setHistory([]);
-        setError(e?.response?.data?.detail || "Erreur lors du chargement de l'historique");
+        setError(e?.response?.data?.detail || "Error loading history");
       });
     userApi.getMySimulations()
       .then(setSimulations)
       .catch((e: any) => {
         setSimulations([]);
-        setError(e?.response?.data?.detail || "Erreur lors du chargement des sauvegardes");
+        setError(e?.response?.data?.detail || "Error loading saves");
       });
   }, []);
 
-  // Ajout d'un historique (test)
+  /**
+   * Add a test history entry (for demonstration)
+   */
   const handleAddHistory = async () => {
     setError(null);
     try {
       await userApi.addHistory({ action: "Test historique", date: new Date().toISOString() });
       userApi.getHistory()
         .then(setHistory)
-        .catch((e: any) => setError(e?.response?.data?.detail || "Erreur lors du rafraîchissement de l'historique"));
+        .catch((e: any) => setError(e?.response?.data?.detail || "Error refreshing history"));
     } catch (e: any) {
-      setError(e?.response?.data?.detail || "Erreur lors de l'ajout à l'historique");
+      setError(e?.response?.data?.detail || "Error adding to history");
     }
   };
 
-  // Ajout d'une sauvegarde (test)
+  /**
+   * Add a test simulation save (for demonstration)
+   */
   const handleSaveSimulation = async () => {
     setError(null);
     try {
@@ -68,39 +79,44 @@ const HistoryView: React.FC = () => {
       });
       userApi.getMySimulations()
         .then(setSimulations)
-        .catch((e: any) => setError(e?.response?.data?.detail || "Erreur lors du rafraîchissement des sauvegardes"));
+        .catch((e: any) => setError(e?.response?.data?.detail || "Error refreshing saves"));
     } catch (e: any) {
-      setError(e?.response?.data?.detail || "Erreur lors de la sauvegarde de la simulation");
+      setError(e?.response?.data?.detail || "Error saving simulation");
     }
   };
 
-  // Suppression d'un historique
+  /**
+   * Delete a history entry by index
+   */
   const handleDeleteHistory = async (idx: number) => {
     setError(null);
     try {
       await userApi.deleteHistory(idx);
       userApi.getHistory().then(setHistory);
     } catch (e: any) {
-      setError(e?.response?.data?.detail || "Erreur lors de la suppression de l'historique");
+      setError(e?.response?.data?.detail || "Error deleting history");
     }
   };
 
-  // Suppression d'une sauvegarde
+  /**
+   * Delete a simulation save by id
+   */
   const handleDeleteSimulation = async (id: number) => {
     setError(null);
     try {
       await userApi.deleteSimulation(id);
       userApi.getMySimulations().then(setSimulations);
     } catch (e: any) {
-      setError(e?.response?.data?.detail || "Erreur lors de la suppression de la sauvegarde");
+      setError(e?.response?.data?.detail || "Error deleting save");
     }
   };
 
+  // If not authenticated, show warning
   if (notConnected) {
     return (
       <Box maxWidth={600} mx="auto" mt={4}>
         <Alert severity="warning" sx={{ mb: 3 }}>
-          Vous devez être connecté pour accéder à l’historique et aux sauvegardes.
+          You must be logged in to access history and saves.
         </Alert>
       </Box>
     );
@@ -108,26 +124,28 @@ const HistoryView: React.FC = () => {
 
   return (
     <Box maxWidth={600} mx="auto" mt={4}>
+      {/* Error display */}
       {error && (
         <Alert severity="error" sx={{ mb: 2 }}>
           {error}
         </Alert>
       )}
+      {/* User action history */}
       <Paper sx={{ p: 3, mb: 3 }}>
         <Stack direction="row" alignItems="center" justifyContent="space-between" mb={2}>
-          <Typography variant="h6" gutterBottom>Historique</Typography>
+          <Typography variant="h6" gutterBottom>History</Typography>
           <Button onClick={handleAddHistory} variant="outlined">
-            Ajouter un historique (test)
+            Add history (test)
           </Button>
         </Stack>
         <List>
-          {history.length === 0 && <ListItem><ListItemText primary="Aucun historique" /></ListItem>}
+          {history.length === 0 && <ListItem><ListItemText primary="No history" /></ListItem>}
           {history.map((item, idx) => (
             <ListItem
               key={idx}
               divider
               secondaryAction={
-                <Tooltip title="Supprimer">
+                <Tooltip title="Delete">
                   <IconButton edge="end" onClick={() => handleDeleteHistory(idx)}>
                     <DeleteIcon color="error" />
                   </IconButton>
@@ -167,21 +185,22 @@ const HistoryView: React.FC = () => {
           ))}
         </List>
       </Paper>
+      {/* Simulation saves */}
       <Paper sx={{ p: 3 }}>
         <Stack direction="row" alignItems="center" justifyContent="space-between" mb={2}>
-          <Typography variant="h6" gutterBottom>Sauvegardes de simulations</Typography>
+          <Typography variant="h6" gutterBottom>Simulation saves</Typography>
           <Button onClick={handleSaveSimulation} variant="outlined">
-            Ajouter une sauvegarde (test)
+            Add save (test)
           </Button>
         </Stack>
         <List>
-          {simulations.length === 0 && <ListItem><ListItemText primary="Aucune sauvegarde" /></ListItem>}
+          {simulations.length === 0 && <ListItem><ListItemText primary="No saves" /></ListItem>}
           {simulations.map((sim, idx) => (
             <ListItem
               key={sim.id || idx}
               divider
               secondaryAction={
-                <Tooltip title="Supprimer">
+                <Tooltip title="Delete">
                   <IconButton edge="end" onClick={() => handleDeleteSimulation(sim.id)}>
                     <DeleteIcon color="error" />
                   </IconButton>
