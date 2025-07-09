@@ -2,137 +2,171 @@
 
 ## Description
 
-Frontend React moderne pour l'application de simulation d'occupation des voies ferroviaires. Cette application permet de :
+A modern React frontend for the railway track occupation simulation application. This app allows you to:
 
-- **Gérer les trains** : Ajouter, modifier, supprimer des trains avec leurs caractéristiques
-- **Visualiser l'occupation** : Voir l'état des voies en temps réel
-- **Analyser les statistiques** : Graphiques et métriques de performance
-- **Support multilingue** : Français, anglais, danois
-- **Interface responsive** : Adaptée aux différentes tailles d'écran
+- **Manage trains**: Add, edit, and delete trains with their characteristics
+- **Visualize occupation**: View real-time track occupation status
+- **Analyze statistics**: Charts and performance metrics
+- **Multilingual support**: French, English, Danish
+- **Responsive interface**: Adapts to all screen sizes
 
-## Fonctionnalités principales
+## Main Features
 
-### 🚄 Gestion des trains
-- Formulaire d'ajout/modification avec validation
-- Liste complète avec actions (éditer, supprimer)
-- Support des trains électriques
-- Gestion des types (storage, testing, pit)
-- Sélection des dépôts (Glostrup, Naestved)
+### 🚄 Train Management
+- Add/edit form with validation
+- Full train list with actions (edit, delete)
+- Support for electric trains
+- Management of train types (storage, testing, pit)
+- Depot selection (Glostrup, Naestved)
 
-### 📊 Visualisations
-- Dashboard avec statistiques clés
-- Graphiques de répartition (type, longueur, dépôt)
-- Occupation des voies en temps réel
-- Indicateurs de performance
+### 📊 Visualizations
+- Dashboard with key statistics
+- Distribution charts (type, length, depot)
+- Real-time track occupation
+- Performance indicators
 
-### 🌍 Internationalisation
-- Interface en français, anglais et danois
-- Traductions complètes de l'interface
-- Formats de date/heure localisés
+### 🌍 Internationalization
+- Interface available in French, English, and Danish
+- Complete UI translations
+- Localized date/time formats
 
-### 🎨 Interface moderne
-- Design Material-UI
-- Thème cohérent et professionnel
-- Navigation intuitive par onglets
-- Responsive design
+### 🎨 Modern UI
+- Material-UI design
+- Consistent, professional theme
+- Tab-based intuitive navigation
+- Fully responsive design
 
-## Technologies utilisées
+## Technologies Used
 
-- **React 18** avec TypeScript
-- **Material-UI (MUI)** pour l'interface
-- **Recharts** pour les graphiques
-- **Axios** pour les appels API
-- **Date-fns** pour la gestion des dates
+- **React 18** with TypeScript
+- **Material-UI (MUI)** for UI components
+- **Recharts** for data visualization
+- **Axios** for API requests
+- **date-fns** for date management
 
 ## Installation
 
-1. **Installer les dépendances** :
-```bash
-npm install
-```
+1. **Install dependencies**:
+   ```bash
+   npm install
+   ```
 
-2. **Démarrer l'application** :
-```bash
-npm start
-```
+2. **Start the development server**:
+   ```bash
+   npm start
+   ```
+   The app will be available at [http://localhost:3000](http://localhost:3000).
 
-3. **Construire pour la production** :
-```bash
-npm run build
-```
+3. **Build for production**:
+   ```bash
+   npm run build
+   ```
+   The static files will be generated in the `build/` directory.
 
 ## Configuration
 
-L'application se connecte par défaut au backend FastAPI sur `http://localhost:8000`.
+By default, the app connects to the FastAPI backend at `http://localhost:8000`.
 
-Pour changer l'URL de l'API, modifiez `API_BASE_URL` dans `src/services/api.ts`.
+To change the API URL, edit the `API_BASE_URL` constant in `src/services/api.ts`:
 
-## Structure du projet
+```typescript
+// src/services/api.ts
+export const API_BASE_URL = "http://localhost:8000";
+```
+
+You can also use environment variables by creating a `.env` file at the project root:
+
+```
+REACT_APP_API_BASE_URL=http://your-backend-url
+```
+
+And update `api.ts` to use `process.env.REACT_APP_API_BASE_URL`.
+
+## Project Structure
 
 ```
 src/
-├── components/           # Composants React
-│   ├── Dashboard.tsx    # Tableau de bord principal
-│   ├── Header.tsx       # Navigation et sélecteur de langue
-│   ├── TrainManagement.tsx  # Gestion CRUD des trains
-│   ├── StatisticsView.tsx   # Visualisations et statistiques
-│   └── DepotView.tsx    # Vue des dépôts et occupation
-├── contexts/            # Contextes React
-│   └── LanguageContext.tsx  # Gestion de la langue
-├── services/            # Services API
-│   └── api.ts          # Client API
-├── types/               # Types TypeScript
-│   └── index.ts        # Interfaces principales
-├── utils/               # Utilitaires
-│   └── translations.ts # Système de traduction
-├── App.tsx             # Composant principal
-└── index.tsx           # Point d'entrée
+├── components/             # React components
+│   ├── Dashboard.tsx       # Main dashboard
+│   ├── Header.tsx          # Navigation & language selector
+│   ├── TrainManagement.tsx # Train CRUD management
+│   ├── StatisticsView.tsx  # Visualizations & stats
+│   └── DepotView.tsx       # Depot & occupation view
+├── contexts/               # React contexts
+│   └── LanguageContext.tsx # Language management
+├── services/               # API services
+│   └── api.ts              # API client
+├── types/                  # TypeScript types
+│   └── index.ts            # Main interfaces
+├── utils/                  # Utilities
+│   └── translations.ts     # Translation system
+├── App.tsx                 # Main component
+└── index.tsx               # Entry point
 ```
 
-## API Backend
+## Backend API
 
-L'application utilise les endpoints suivants :
+The application uses the following endpoints:
 
-- `GET /trains` - Récupérer tous les trains
-- `POST /trains` - Ajouter un nouveau train
-- `PUT /trains/{id}` - Modifier un train
-- `DELETE /trains/{id}` - Supprimer un train
-- `GET /statistics` - Récupérer les statistiques
-- `GET /requirements` - Récupérer les besoins
-- `POST /reset` - Réinitialiser la simulation
-- `POST /recalculate` - Recalculer la simulation
+- `GET /trains` - Retrieve all trains
+- `POST /trains` - Add a new train
+- `PUT /trains/{id}` - Edit a train
+- `DELETE /trains/{id}` - Delete a train
+- `GET /statistics` - Retrieve statistics
+- `GET /requirements` - Retrieve requirements
+- `POST /reset` - Reset the simulation
+- `POST /recalculate` - Recalculate the simulation
 
-## Développement
+**Expected data format:** All endpoints return JSON. Refer to `src/types/index.ts` for interface details.
 
-### Ajout de nouvelles traductions
+## Development
 
-1. Modifier le fichier `src/utils/translations.ts`
-2. Ajouter les nouvelles clés dans l'objet `TRANSLATIONS`
-3. Utiliser `t('cle', language)` dans les composants
+### Adding New Translations
 
-### Ajout de nouveaux composants
+1. Edit `src/utils/translations.ts`
+2. Add new keys to the `TRANSLATIONS` object
+3. Use `t('key', language)` in components
 
-1. Créer le composant dans `src/components/`
-2. Ajouter l'import dans `App.tsx`
-3. Intégrer dans la navigation si nécessaire
+### Adding New Components
+
+1. Create the component in `src/components/`
+2. Import it in `App.tsx`
+3. Integrate it into navigation if needed
+
+### Linting & Formatting
+
+- Use ESLint and Prettier for code quality and formatting.
+- Run `npm run lint` to check for lint errors.
+
+### Testing
+
+- Unit tests can be added with Jest and React Testing Library.
+- Run `npm test` to execute tests.
 
 ## Production
 
-Pour déployer en production :
+To deploy in production:
 
-1. Construire l'application : `npm run build`
-2. Servir les fichiers statiques depuis le dossier `build/`
-3. Configurer le serveur web pour rediriger toutes les routes vers `index.html`
+1. Build the app: `npm run build`
+2. Serve the static files from the `build/` directory (e.g., with Nginx, Apache, or Vercel)
+3. Configure your web server to redirect all routes to `index.html` (for SPA routing)
 
-## Intégration avec le backend
+**Example Nginx config:**
+```nginx
+location / {
+    try_files $uri /index.html;
+}
+```
 
-Assurez-vous que votre backend FastAPI :
+## Backend Integration
 
-1. Active CORS pour permettre les requêtes depuis le frontend
-2. Expose les endpoints nécessaires
-3. Retourne les données au format JSON attendu
+Make sure your FastAPI backend:
 
-Exemple de configuration CORS pour FastAPI :
+1. Enables CORS to allow requests from the frontend
+2. Exposes the required endpoints
+3. Returns data in the expected JSON format
+
+**Example CORS configuration for FastAPI:**
 
 ```python
 from fastapi.middleware.cors import CORSMiddleware
@@ -151,3 +185,17 @@ app.add_middleware(
     expose_headers=["*", "Authorization", "Content-Type"],
 )
 ```
+
+## Troubleshooting
+
+- **API connection errors**: Check that the backend is running and CORS is enabled.
+- **Build issues**: Ensure Node.js and npm are up to date.
+- **Translations not appearing**: Verify keys in `translations.ts` and usage in components.
+
+## License
+
+This project is licensed under the MIT License.
+
+---
+
+For any questions or contributions, please open an issue or submit a pull request!
