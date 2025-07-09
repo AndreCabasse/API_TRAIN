@@ -42,32 +42,42 @@ interface HeaderProps {
   onTabChange: (tab: string) => void;
 }
 
+/**
+ * Main header component for the application.
+ * Handles navigation tabs, language selection, user profile menu, and responsive drawer for small screens.
+ */
 const Header: React.FC<HeaderProps> = ({ activeTab, onTabChange }) => {
   const { language, setLanguage } = useLanguage();
   const theme = useTheme();
   const { user, logout } = useUser();
 
-  // Responsive drawer state
+  // State for responsive drawer (mobile/tablet)
   const [drawerOpen, setDrawerOpen] = useState(false);
-  // Profil menu state
+  // State for user profile menu
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
+  // Detect if the screen is small (for responsive drawer)
   const isSmallScreen = useMediaQuery('(max-width:1100px)');
 
+  // Handle user profile menu open
   const handleProfileClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
+  // Handle user profile menu close
   const handleClose = () => {
     setAnchorEl(null);
   };
+  // Handle language change from dropdown
   const handleLanguageChange = (event: any) => {
     setLanguage(event.target.value as Language);
   };
+  // Toggle the responsive drawer
   const handleDrawerToggle = () => {
     setDrawerOpen((prev) => !prev);
   };
 
+  // Navigation tabs configuration
   const tabs = [
     { id: 'dashboard', label: t('dashboard', language), icon: <DashboardIcon /> },
     { id: 'trains', label: t('trains', language), icon: <TrainIcon /> },
@@ -100,7 +110,7 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabChange }) => {
           boxSizing: 'border-box',
         }}
       >
-        {/* Logo + Titre avec fond et ombre */}
+        {/* Logo and title with background and shadow */}
         <Box
           display="flex"
           alignItems="center"
@@ -144,9 +154,10 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabChange }) => {
           </Typography>
         </Box>
         <Box sx={{ width: 2, height: { xs: 32, sm: 40, md: 48 }, bgcolor: 'rgba(255,255,255,0.12)', mx: { xs: 1, sm: 2 }, borderRadius: 1, display: { xs: 'none', sm: 'block' } }} />
-        {/* Responsive navigation */}
+        {/* Responsive navigation: Drawer for small screens, horizontal tabs for large screens */}
         {isSmallScreen ? (
           <>
+            {/* Drawer menu for mobile/tablet */}
             <IconButton color="inherit" onClick={handleDrawerToggle} sx={{ ml: 1 }}>
               <span className="material-icons">menu</span>
             </IconButton>
@@ -161,6 +172,7 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabChange }) => {
                   ))}
                 </List>
                 <Divider sx={{ my: 1 }} />
+                {/* Language selection in drawer */}
                 <FormControl size="small" fullWidth sx={{ mb: 2 }}>
                   <InputLabel><LanguageIcon sx={{ mr: 1, fontSize: 'small' }} />{t('language', language)}</InputLabel>
                   <Select value={language} onChange={handleLanguageChange}>
@@ -170,6 +182,7 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabChange }) => {
                   </Select>
                 </FormControl>
                 <Divider sx={{ my: 1 }} />
+                {/* User profile info in drawer */}
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                   <Avatar sx={{ bgcolor: '#fff', color: '#23272F', width: 36, height: 36 }}>
                     <AccountCircle sx={{ fontSize: 32 }} />
@@ -188,6 +201,7 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabChange }) => {
           </>
         ) : (
           <>
+            {/* Horizontal navigation tabs for desktop */}
             <Box sx={{
               display: 'flex',
               gap: { xs: 0.5, sm: 1 },
@@ -236,6 +250,7 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabChange }) => {
                 </Button>
               ))}
             </Box>
+            {/* Language selection and user profile for desktop */}
             <Box sx={{
               display: 'flex',
               alignItems: 'center',
@@ -279,7 +294,7 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabChange }) => {
                   <MenuItem value="da">Dansk</MenuItem>
                 </Select>
               </FormControl>
-              {/* Profil utilisateur */}
+              {/* User profile icon and menu */}
               <IconButton onClick={handleProfileClick}>
                 <Avatar sx={{ bgcolor: '#fff', color: '#23272F', width: 36, height: 36 }}>
                   <AccountCircle sx={{ fontSize: 32 }} />

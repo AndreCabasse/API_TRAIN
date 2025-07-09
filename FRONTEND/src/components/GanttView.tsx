@@ -1,4 +1,3 @@
-
 import { Box, Container, Typography, Paper } from "@mui/material";
 import AllTrainsGanttChart from "./AllTrainsGanttChart";
 import { useLanguage } from "../contexts/LanguageContext";
@@ -10,7 +9,10 @@ import { useEffect, useState } from "react";
 import { trainApi } from "../services/api";
 dayjs.extend(isoWeek);
 
-// Fonction utilitaire pour barres et numéros de semaine
+/**
+ * Utility function to generate vertical week lines and week number annotations for the Gantt chart.
+ * Adds a vertical line and annotation for each ISO week between startDate and endDate.
+ */
 export function getWeekLinesAndAnnotations(startDate: string, endDate: string) {
   const shapes: Partial<Shape>[] = [];
   const annotations: any[] = [];
@@ -36,7 +38,7 @@ export function getWeekLinesAndAnnotations(startDate: string, endDate: string) {
       yref: 'paper',
       y: 1.04,
       showarrow: false,
-      text: `S${current.isoWeek()}`,
+      text: `W${current.isoWeek()}`,
       font: { color: '#b71c1c', size: 13, family: "Roboto, Arial, sans-serif" },
       bgcolor: '#fff',
       opacity: 0.9,
@@ -47,6 +49,11 @@ export function getWeekLinesAndAnnotations(startDate: string, endDate: string) {
   return { shapes, annotations };
 }
 
+/**
+ * Main component for displaying the global Gantt chart view.
+ * Allows switching between simulation and optimized Gantt modes.
+ * Fetches and displays data for all trains.
+ */
 const GanttView = () => {
   const { language } = useLanguage();
   const [mode, setMode] = useState<'simulation' | 'optimise'>('simulation');
@@ -54,6 +61,7 @@ const GanttView = () => {
   const [optimisedData, setOptimisedData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
+  // Fetch simulation and optimized Gantt data on mount
   useEffect(() => {
     setLoading(true);
     trainApi.getAllTrainsGantt().then((data) => {
@@ -65,10 +73,14 @@ const GanttView = () => {
     });
   }, []);
 
+  /**
+   * Handle switching between simulation and optimized Gantt modes.
+   */
   const handleModeChange = (newMode: 'simulation' | 'optimise') => {
     setMode(newMode);
   };
 
+  // Select the correct data set based on the current mode
   const ganttData = mode === 'simulation' ? simulationData : optimisedData;
 
   return (
@@ -80,8 +92,9 @@ const GanttView = () => {
           gutterBottom
           sx={{ mb: 3, color: "#D32F2F", letterSpacing: 1 }}
         >
-          {t('global_gantt_title', language) || t('gantt_chart', language) || "Diagramme de Gantt global des trains"}
+          {t('global_gantt_title', language) || t('gantt_chart', language) || "Global Gantt chart for trains"}
         </Typography>
+        {/* Mode selection buttons */}
         <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
           <button
             onClick={() => handleModeChange('simulation')}
@@ -113,9 +126,10 @@ const GanttView = () => {
               transition: 'all 0.2s',
             }}
           >
-            Gantt optimisé
+            Gantt optimized
           </button>
         </Box>
+        {/* Gantt chart display */}
         <Paper
           sx={{
             p: { xs: 1, sm: 4 },
@@ -131,7 +145,7 @@ const GanttView = () => {
         >
           <Box sx={{ flexGrow: 1 }}>
             {loading ? (
-              <Typography variant="h6" color="text.secondary">Chargement…</Typography>
+              <Typography variant="h6" color="text.secondary">Loading…</Typography>
             ) : (
               <AllTrainsGanttChart
                 height={800}
