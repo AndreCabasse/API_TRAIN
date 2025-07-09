@@ -15,7 +15,7 @@ import {
   TableHead,
   TableRow,
   Paper,
- // Toolbar,
+  // Toolbar,
   Chip,
   Tooltip,
   Button
@@ -34,7 +34,7 @@ import { t } from '../utils/translations';
 import { trainApi } from '../services/api';
 import { Train, Statistics } from '../types';
 
-// Palette de rouges nuancés
+// Red color palette for UI theming
 const redPalette = {
   main: '#D32F2F',
   light: '#FF6659',
@@ -54,11 +54,13 @@ const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Fetch train and statistics data on component mount
   useEffect(() => {
     loadData();
     // eslint-disable-next-line
   }, []);
 
+  // Loads train list and statistics from API
   const loadData = async () => {
     try {
       setLoading(true);
@@ -76,6 +78,7 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  // Show loading spinner while fetching data
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" height="400px">
@@ -84,6 +87,7 @@ const Dashboard: React.FC = () => {
     );
   }
 
+  // Show error alert if data loading fails
   if (error) {
     return (
       <Container>
@@ -92,6 +96,7 @@ const Dashboard: React.FC = () => {
     );
   }
 
+  // Filter trains by waiting/placed status
   const waitingTrains = trains.filter(train => train.en_attente);
   const placedTrains = trains.filter(train => !train.en_attente);
 
@@ -109,7 +114,7 @@ const Dashboard: React.FC = () => {
           minHeight: 700,
         }}
       >
-        {/* Carte d'accueil moderne */}
+        {/* Welcome card with dashboard title and refresh button */}
         <Box
           sx={{
             mb: 4,
@@ -131,6 +136,7 @@ const Dashboard: React.FC = () => {
             </Typography>
           </Box>
           <Box flexGrow={1} />
+          {/* Button to reload data */}
           <Button
             variant="outlined"
             size="small"
@@ -148,8 +154,9 @@ const Dashboard: React.FC = () => {
         </Box>
 
         <Grid container spacing={3}>
-          {/* Statistiques principales */}
+          {/* Main statistics cards */}
           <Grid item xs={12} sm={6} md={3} sx={{ animation: "fadeInUp 0.7s" }}>
+            {/* Card: Total number of trains */}
             <Card
               sx={{
                 background: `linear-gradient(120deg, #fff 70%, ${redPalette.faded2} 100%)`,
@@ -182,6 +189,7 @@ const Dashboard: React.FC = () => {
           </Grid>
 
           <Grid item xs={12} sm={6} md={3} sx={{ animation: "fadeInUp 0.8s" }}>
+            {/* Card: Number of waiting trains */}
             <Card
               sx={{
                 background: `linear-gradient(120deg, #fff 70%, ${redPalette.faded} 100%)`,
@@ -214,6 +222,7 @@ const Dashboard: React.FC = () => {
           </Grid>
 
           <Grid item xs={12} sm={6} md={3} sx={{ animation: "fadeInUp 0.9s" }}>
+            {/* Card: Average waiting time */}
             <Card
               sx={{
                 background: `linear-gradient(120deg, #fff 70%, ${redPalette.faded3} 100%)`,
@@ -246,6 +255,7 @@ const Dashboard: React.FC = () => {
           </Grid>
 
           <Grid item xs={12} sm={6} md={3} sx={{ animation: "fadeInUp 1s" }}>
+            {/* Card: Global occupancy rate */}
             <Card
               sx={{
                 background: `linear-gradient(120deg, #fff 70%, ${redPalette.lighter} 100%)`,
@@ -277,7 +287,7 @@ const Dashboard: React.FC = () => {
             </Card>
           </Grid>
 
-          {/* Tableau des trains placés */}
+          {/* Table of placed trains */}
           <Grid item xs={12} sx={{ animation: "fadeInUp 1.1s" }}>
             <Card
               sx={{
@@ -293,6 +303,7 @@ const Dashboard: React.FC = () => {
                 <Typography variant="h6" gutterBottom sx={{ color: redPalette.main, fontWeight: 700, mb: 2 }}>
                   {t('placed_trains', language)}
                 </Typography>
+                {/* Show table if there are placed trains, otherwise show a message */}
                 {placedTrains.length > 0 ? (
                   <TableContainer
                     component={Paper}
@@ -318,6 +329,7 @@ const Dashboard: React.FC = () => {
                         </TableRow>
                       </TableHead>
                       <TableBody>
+                        {/* Render each placed train row */}
                         {placedTrains.map((train) => (
                           <TableRow
                             key={train.id}
@@ -331,10 +343,12 @@ const Dashboard: React.FC = () => {
                             <TableCell>
                               <Tooltip title={train.nom}>
                                 <span style={{ display: "flex", alignItems: "center" }}>
+                                  {/* Show icon if train is electric */}
                                   {train.electrique && <FlashOnIcon sx={{ fontSize: 16, color: redPalette.accent, mr: 0.5 }} />}
                                   <Typography component="span" sx={{ fontWeight: 600 }}>
                                     {train.nom}
                                   </Typography>
+                                  {/* Show chip if train is still waiting (should not happen for placed trains) */}
                                   {train.en_attente && (
                                     <Chip
                                       label={t('waiting', language)}
@@ -354,6 +368,7 @@ const Dashboard: React.FC = () => {
                               </Tooltip>
                             </TableCell>
                             <TableCell>
+                              {/* Train type chip with color depending on type */}
                               <Chip
                                 label={t(train.type, language)}
                                 size="small"
@@ -370,6 +385,7 @@ const Dashboard: React.FC = () => {
                               />
                             </TableCell>
                             <TableCell>
+                              {/* Track number or dash if not assigned */}
                               <Typography sx={{ fontWeight: 500 }}>
                                 {train.voie !== null ? train.voie : '-'}
                               </Typography>
@@ -385,16 +401,19 @@ const Dashboard: React.FC = () => {
                               </Typography>
                             </TableCell>
                             <TableCell>
+                              {/* Arrival time formatted */}
                               <Typography sx={{ fontWeight: 500 }}>
                                 {new Date(train.arrivee).toLocaleString(language)}
                               </Typography>
                             </TableCell>
                             <TableCell>
+                              {/* Departure time formatted */}
                               <Typography sx={{ fontWeight: 500 }}>
                                 {new Date(train.depart).toLocaleString(language)}
                               </Typography>
                             </TableCell>
                             <TableCell>
+                              {/* Electric status */}
                               <Typography sx={{ fontWeight: 500 }}>
                                 {train.electrique ? t('yes', language) : t('no', language)}
                               </Typography>
@@ -405,6 +424,7 @@ const Dashboard: React.FC = () => {
                     </Table>
                   </TableContainer>
                 ) : (
+                  // Message if no placed trains
                   <Box display="flex" alignItems="center" justifyContent="center" minHeight={80}>
                     <Typography color="textSecondary" sx={{ fontStyle: "italic" }}>
                       {t('no_placed_trains', language)}
@@ -415,7 +435,7 @@ const Dashboard: React.FC = () => {
             </Card>
           </Grid>
 
-          {/* Trains en attente */}
+          {/* Table of waiting trains (only if any are waiting) */}
           {waitingTrains.length > 0 && (
             <Grid item xs={12} sx={{ animation: "fadeInUp 1.2s" }}>
               <Card
@@ -455,6 +475,7 @@ const Dashboard: React.FC = () => {
                         </TableRow>
                       </TableHead>
                       <TableBody>
+                        {/* Render each waiting train row */}
                         {waitingTrains.map((train) => (
                           <TableRow
                             key={train.id}
@@ -468,10 +489,12 @@ const Dashboard: React.FC = () => {
                             <TableCell>
                               <Tooltip title={train.nom}>
                                 <span style={{ display: "flex", alignItems: "center" }}>
+                                  {/* Show icon if train is electric */}
                                   {train.electrique && <FlashOnIcon sx={{ fontSize: 16, color: redPalette.accent, mr: 0.5 }} />}
                                   <Typography component="span" sx={{ fontWeight: 600 }}>
                                     {train.nom}
                                   </Typography>
+                                  {/* Waiting chip */}
                                   {train.en_attente && (
                                     <Chip
                                       label={t('waiting', language)}
@@ -511,11 +534,13 @@ const Dashboard: React.FC = () => {
                               </Typography>
                             </TableCell>
                             <TableCell>
+                              {/* Waiting start time or dash */}
                               <Typography sx={{ fontWeight: 500 }}>
                                 {train.debut_attente ? new Date(train.debut_attente).toLocaleString(language) : '-'}
                               </Typography>
                             </TableCell>
                             <TableCell>
+                              {/* Waiting end time or dash */}
                               <Typography sx={{ fontWeight: 500 }}>
                                 {train.fin_attente ? new Date(train.fin_attente).toLocaleString(language) : '-'}
                               </Typography>
@@ -530,7 +555,7 @@ const Dashboard: React.FC = () => {
             </Grid>
           )}
 
-          {/* Trains électriques */}
+          {/* Card: Electric trains count */}
           <Grid item xs={12} md={6} sx={{ animation: "fadeInUp 1.3s" }}>
             <Card
               sx={{
@@ -562,7 +587,7 @@ const Dashboard: React.FC = () => {
             </Card>
           </Grid>
 
-          {/* Répartition par dépôt */}
+          {/* Card: Train distribution by depot */}
           <Grid item xs={12} md={6} sx={{ animation: "fadeInUp 1.4s" }}>
             <Card
               sx={{
@@ -584,6 +609,7 @@ const Dashboard: React.FC = () => {
                     {t('depot_distribution', language)}
                   </Typography>
                 </Box>
+                {/* List of depots and train counts */}
                 {statistics?.stats_par_depot && Object.entries(statistics.stats_par_depot).map(([depot, stats]: [string, any]) => (
                   <Box key={depot} sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                     <Typography sx={{ color: redPalette.dark }}>{depot}</Typography>

@@ -4,7 +4,7 @@ import { trainApi } from "../services/api";
 import type { Shape } from "plotly.js";
 import { t, Language } from "../utils/translations";
 
-// Palette de rouges harmonisée
+// Harmonized red color palette for consistent UI theming
 const redPalette = {
   main: "#D32F2F",
   light: "#FF6659",
@@ -17,29 +17,35 @@ const redPalette = {
   faded3: "#fff0f0",
 };
 
+// Type representing a single train's Gantt data
 type GanttTrain = {
   train_id: number;
   train_nom: string;
   depot: string;
   voie: number | null;
-  debut: string;
-  fin: string;
+  debut: string; // Start datetime (ISO string)
+  fin: string;   // End datetime (ISO string)
   type: string;
   electrique: boolean;
   waiting?: boolean;
 };
 
+// Color palette for depots, mapped by depot name
 const DEPOT_COLORS = [
-  "#D32F2F", // rouge principal
-  "#FF6659", // rouge clair
+  "#D32F2F", // main red
+  "#FF6659", // light red
   "#ff9800", // orange
-  "#388e3c", // vert
-  "#7b1fa2", // violet
-  "#0097a7", // bleu canard
-  "#c2185b", // rose foncé
-  "#fbc02d", // jaune
+  "#388e3c", // green
+  "#7b1fa2", // purple
+  "#0097a7", // teal blue
+  "#c2185b", // dark pink
+  "#fbc02d", // yellow
 ];
 const depotColorMap = new Map<string, string>();
+/**
+ * Returns a unique color for each depot, consistent across renders.
+ * @param depot - Depot name
+ */
 function getColorForDepot(depot: string) {
   if (!depotColorMap.has(depot)) {
     depotColorMap.set(depot, DEPOT_COLORS[depotColorMap.size % DEPOT_COLORS.length]);
@@ -48,14 +54,18 @@ function getColorForDepot(depot: string) {
 }
 
 interface AllTrainsGanttChartProps {
-  height?: number;
-  showLegend?: boolean;
-  legendOrientation?: "h" | "v";
-  language: string;
+  height?: number; // Height of the chart in pixels
+  showLegend?: boolean; // Whether to display the legend
+  legendOrientation?: "h" | "v"; // Legend orientation: horizontal or vertical
+  language: string; // Current language code
   getWeekLinesAndAnnotations?: (startDate: string, endDate: string) => { shapes: Partial<Shape>[]; annotations: any[] };
-  data?: GanttTrain[];
+  data?: GanttTrain[]; // Optional data override (otherwise fetched)
 }
 
+/**
+ * Displays a Gantt chart for all trains, grouped by depot and colored accordingly.
+ * Fetches data from the backend if not provided via props.
+ */
 const AllTrainsGanttChart = ({
   height = 800,
   showLegend = true,
@@ -66,7 +76,7 @@ const AllTrainsGanttChart = ({
 }: AllTrainsGanttChartProps) => {
   const [internalData, setInternalData] = useState<GanttTrain[]>([]);
 
-  // Si les données sont fournies en props, on les utilise, sinon on fetch
+  // Use provided data if available, otherwise fetch from API
   const data = propsData ?? internalData;
 
   useEffect(() => {
@@ -75,7 +85,7 @@ const AllTrainsGanttChart = ({
     }
   }, [propsData]);
 
-  // Pour n'afficher chaque dépôt qu'une seule fois dans la légende
+  // Map to ensure each depot appears only once in the legend
   const depotFirstIndex = new Map<string, number>();
   data.forEach((d, i) => {
     if (!depotFirstIndex.has(d.depot)) {
@@ -83,7 +93,7 @@ const AllTrainsGanttChart = ({
     }
   });
 
-  // Effet zebra sur les lignes
+  // Zebra effect: alternate background for each train row
   const yCategories = Array.from(new Set(data.map(d => d.train_nom)));
   const zebraShapes = yCategories.map((train, idx) => ({
     type: "rect" as const,
@@ -99,9 +109,10 @@ const AllTrainsGanttChart = ({
     line: { width: 0 },
   }));
 
-  // Barres plus fines si beaucoup de trains
+  // Adjust bar width for readability if there are many trains
   const barWidth = yCategories.length > 25 ? 12 : 22;
 
+  // Prepare Plotly data traces for each train
   const plotData = data.map((d, i) => ({
     x: [d.debut, d.fin],
     y: [d.train_nom, d.train_nom],
@@ -123,11 +134,11 @@ const AllTrainsGanttChart = ({
     showlegend: depotFirstIndex.get(d.depot) === i,
   }));
 
-  // Calcul période affichée pour les semaines
+  // Compute the minimum and maximum dates for the displayed period
   const minDate = data.length ? data.reduce((min, d) => d.debut < min ? d.debut : min, data[0].debut) : "";
   const maxDate = data.length ? data.reduce((max, d) => d.fin > max ? d.fin : max, data[0].fin) : "";
 
-  // Génère shapes et annotations de semaine si la fonction est fournie
+  // Generate week lines and annotations if the function is provided
   const weekShapesAndAnnotations = getWeekLinesAndAnnotations && minDate && maxDate
     ? getWeekLinesAndAnnotations(minDate, maxDate)
     : { shapes: [], annotations: [] };
