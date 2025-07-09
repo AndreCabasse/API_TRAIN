@@ -308,10 +308,10 @@ const TrainListTable: React.FC<{ trains: Train[], refDiv?: React.RefObject<HTMLD
       <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse', fontSize: 15 }}>
         <thead>
           <tr>
-            <th style={{ borderBottom: '1px solid #ccc', padding: 6 }}>{t('train', language) || "Train"}</th>
-            <th style={{ borderBottom: '1px solid #ccc', padding: 6 }}>{t('type', language) || "Type"}</th>
-            <th style={{ borderBottom: '1px solid #ccc', padding: 6 }}>{t('arrival', language) || "Arrivée"}</th>
-            <th style={{ borderBottom: '1px solid #ccc', padding: 6 }}>{t('departure', language) || "Départ"}</th>
+            <th style={{ borderBottom: '1px solid #ccc', padding: 6 }}>{t('trains', language) || "Train"}</th>
+            <th style={{ borderBottom: '1px solid #ccc', padding: 6 }}>{t('train_type', language) || "Type"}</th>
+            <th style={{ borderBottom: '1px solid #ccc', padding: 6 }}>{t('arrival_time', language) || "Arrivée"}</th>
+            <th style={{ borderBottom: '1px solid #ccc', padding: 6 }}>{t('departure_time', language) || "Départ"}</th>
             <th style={{ borderBottom: '1px solid #ccc', padding: 6 }}>{t('track', language) || "Voie"}</th>
             <th style={{ borderBottom: '1px solid #ccc', padding: 6 }}>{t('length', language) || "Longueur"}</th>
           </tr>

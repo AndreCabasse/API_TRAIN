@@ -1,4 +1,4 @@
-// Traductions issues de Traduction_Core.py
+// Translations from de Traduction_Core.py
 export const TRANSLATIONS = {
         "title": {"fr": "Simulation d'occupation des voies","en": "Track Occupancy Simulation","da": "Sporbesættelsessimulering"},
         "add_train": {"fr": "Ajouter un train", "en": "Add a train", "da": "Tilføj et tog"},
@@ -297,6 +297,7 @@ export const TRANSLATIONS = {
         "login_error": {"fr": "Erreur de connexion","en": "Login error","da": "Login-fejl"},
         "register_error": {"fr": "Erreur d'inscription","en": "Registration error","da": "Fejl ved oprettelse"},
         "date_and_time": { "fr": "Date et heure", "en": "Date and time", "da": "Dato og tid" },
+        "detailed_train_list": {"fr": "Liste détaillée des trains","en": "Detailed train list","da": "Detaljeret togliste"},
         "wagon_add_error": {"fr": "Erreur lors de l'ajout du wagon","en": "Error adding wagon","da": "Fejl ved tilføjelse af vogn"},
         "locomotive_add_error": {"fr": "Erreur lors de l'ajout de la locomotive","en": "Error adding locomotive","da": "Fejl ved tilføjelse af lokomotiv"},
 };
