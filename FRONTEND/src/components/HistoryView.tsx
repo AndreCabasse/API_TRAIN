@@ -11,39 +11,36 @@ import {
   IconButton,
   Stack,
   Tooltip,
+  TextField,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
+import ReplayIcon from "@mui/icons-material/Replay";
+import SaveIcon from "@mui/icons-material/Save";
 import { userApi } from "../services/userApi";
+import { trainApi } from "../services/api"; // ajoute ce import en haut
+
 
 /**
- * HistoryView component.
- * Displays user action history and simulation saves.
- * Allows adding, deleting, and viewing details for both.
- * Handles authentication state and error display.
+ * SimulationSaves component.
+ * Allows the user to save the current simulation with a custom name,
+ * view all their saves, load or delete them.
  */
-const HistoryView: React.FC = () => {
-  const [history, setHistory] = useState<any[]>([]);
+const SimulationSaves: React.FC<{ onLoadSimulation?: () => void }> = ({ onLoadSimulation }) => {
   const [simulations, setSimulations] = useState<any[]>([]);
   const [notConnected, setNotConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [saveName, setSaveName] = useState("");
 
-  // On mount, check authentication and fetch history/simulations
+  // Fetch all simulation saves on mount
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
       setNotConnected(true);
-      setHistory([]);
       setSimulations([]);
       return;
     }
     setNotConnected(false);
     setError(null);
-    userApi.getHistory()
-      .then(setHistory)
-      .catch((e: any) => {
-        setHistory([]);
-        setError(e?.response?.data?.detail || "Error loading history");
-      });
     userApi.getMySimulations()
       .then(setSimulations)
       .catch((e: any) => {
@@ -52,55 +49,26 @@ const HistoryView: React.FC = () => {
       });
   }, []);
 
-  /**
-   * Add a test history entry (for demonstration)
-   */
-  const handleAddHistory = async () => {
-    setError(null);
-    try {
-      await userApi.addHistory({ action: "Test historique", date: new Date().toISOString() });
-      userApi.getHistory()
-        .then(setHistory)
-        .catch((e: any) => setError(e?.response?.data?.detail || "Error refreshing history"));
-    } catch (e: any) {
-      setError(e?.response?.data?.detail || "Error adding to history");
-    }
-  };
+  // Save the current simulation with a custom name
+    const handleSaveSimulation = async () => {
+      setError(null);
+      if (!saveName.trim()) {
+        setError("Please provide a name for the save.");
+        return;
+      }
+      try {
+        // Fetch the real train list from the backend
+        const trains = await trainApi.getTrains();
+        const data = { trains, date: new Date().toISOString() };
+        await userApi.saveSimulation({ name: saveName.trim(), data });
+        setSaveName("");
+        userApi.getMySimulations().then(setSimulations);
+      } catch (e: any) {
+        setError(e?.response?.data?.detail || "Error saving simulation");
+      }
+    };
 
-  /**
-   * Add a test simulation save (for demonstration)
-   */
-  const handleSaveSimulation = async () => {
-    setError(null);
-    try {
-      await userApi.saveSimulation({
-        name: "Simulation test",
-        data: { foo: "bar", date: new Date().toISOString() },
-      });
-      userApi.getMySimulations()
-        .then(setSimulations)
-        .catch((e: any) => setError(e?.response?.data?.detail || "Error refreshing saves"));
-    } catch (e: any) {
-      setError(e?.response?.data?.detail || "Error saving simulation");
-    }
-  };
-
-  /**
-   * Delete a history entry by index
-   */
-  const handleDeleteHistory = async (idx: number) => {
-    setError(null);
-    try {
-      await userApi.deleteHistory(idx);
-      userApi.getHistory().then(setHistory);
-    } catch (e: any) {
-      setError(e?.response?.data?.detail || "Error deleting history");
-    }
-  };
-
-  /**
-   * Delete a simulation save by id
-   */
+  // Delete a simulation save by id
   const handleDeleteSimulation = async (id: number) => {
     setError(null);
     try {
@@ -111,12 +79,28 @@ const HistoryView: React.FC = () => {
     }
   };
 
+  // Load a simulation: store in localStorage and switch to trains tab
+  //const handleLoadSimulation = (sim: any) => {
+  //  if (sim?.data) {
+   //   localStorage.setItem("loadedSimulation", JSON.stringify(sim.data));
+  //    if (onLoadSimulation) onLoadSimulation();
+   // }
+  //};
+
+  const handleLoadSimulation = (sim: any) => {
+    if (sim?.data) {
+      localStorage.setItem("loadedSimulation", JSON.stringify(sim.data));
+      window.dispatchEvent(new Event("simulationLoaded")); // Ajoute cette ligne
+      if (onLoadSimulation) onLoadSimulation();
+    }
+  };
+
   // If not authenticated, show warning
   if (notConnected) {
     return (
       <Box maxWidth={600} mx="auto" mt={4}>
         <Alert severity="warning" sx={{ mb: 3 }}>
-          You must be logged in to access history and saves.
+          You must be logged in to access saves.
         </Alert>
       </Box>
     );
@@ -130,69 +114,30 @@ const HistoryView: React.FC = () => {
           {error}
         </Alert>
       )}
-      {/* User action history */}
+      {/* Save simulation form */}
       <Paper sx={{ p: 3, mb: 3 }}>
-        <Stack direction="row" alignItems="center" justifyContent="space-between" mb={2}>
-          <Typography variant="h6" gutterBottom>History</Typography>
-          <Button onClick={handleAddHistory} variant="outlined">
-            Add history (test)
+        <Typography variant="h6" gutterBottom>Save current simulation</Typography>
+        <Stack direction="row" spacing={2} alignItems="center" mt={2}>
+          <TextField
+            label="Save name"
+            value={saveName}
+            onChange={e => setSaveName(e.target.value)}
+            size="small"
+            sx={{ flex: 1 }}
+          />
+          <Button
+            onClick={handleSaveSimulation}
+            variant="contained"
+            color="primary"
+            startIcon={<SaveIcon />}
+          >
+            Save
           </Button>
         </Stack>
-        <List>
-          {history.length === 0 && <ListItem><ListItemText primary="No history" /></ListItem>}
-          {history.map((item, idx) => (
-            <ListItem
-              key={idx}
-              divider
-              secondaryAction={
-                <Tooltip title="Delete">
-                  <IconButton edge="end" onClick={() => handleDeleteHistory(idx)}>
-                    <DeleteIcon color="error" />
-                  </IconButton>
-                </Tooltip>
-              }
-              sx={{
-                bgcolor: idx % 2 === 0 ? "#fff" : "#f8d7da",
-                borderRadius: 2,
-                mb: 1,
-                boxShadow: 1,
-              }}
-            >
-              <ListItemText
-                primary={
-                  <Stack direction="row" spacing={2} alignItems="center">
-                    <Typography fontWeight="bold">{item.action || "Action"}</Typography>
-                    {item.date && (
-                      <Typography variant="caption" color="text.secondary">
-                        {new Date(item.date).toLocaleString()}
-                      </Typography>
-                    )}
-                  </Stack>
-                }
-                secondary={
-                  <Box sx={{ mt: 1 }}>
-                    {Object.entries(item)
-                      .filter(([k]) => k !== "action" && k !== "date")
-                      .map(([k, v]) => (
-                        <Typography key={k} variant="body2" sx={{ color: "#555" }}>
-                          <b>{k}:</b> {typeof v === "object" ? JSON.stringify(v) : String(v)}
-                        </Typography>
-                      ))}
-                  </Box>
-                }
-              />
-            </ListItem>
-          ))}
-        </List>
       </Paper>
-      {/* Simulation saves */}
+      {/* Simulation saves list */}
       <Paper sx={{ p: 3 }}>
-        <Stack direction="row" alignItems="center" justifyContent="space-between" mb={2}>
-          <Typography variant="h6" gutterBottom>Simulation saves</Typography>
-          <Button onClick={handleSaveSimulation} variant="outlined">
-            Add save (test)
-          </Button>
-        </Stack>
+        <Typography variant="h6" gutterBottom>My saves</Typography>
         <List>
           {simulations.length === 0 && <ListItem><ListItemText primary="No saves" /></ListItem>}
           {simulations.map((sim, idx) => (
@@ -200,11 +145,18 @@ const HistoryView: React.FC = () => {
               key={sim.id || idx}
               divider
               secondaryAction={
-                <Tooltip title="Delete">
-                  <IconButton edge="end" onClick={() => handleDeleteSimulation(sim.id)}>
-                    <DeleteIcon color="error" />
-                  </IconButton>
-                </Tooltip>
+                <Stack direction="row" spacing={1}>
+                  <Tooltip title="Load this save">
+                    <IconButton edge="end" color="primary" onClick={() => handleLoadSimulation(sim)}>
+                      <ReplayIcon />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Delete">
+                    <IconButton edge="end" onClick={() => handleDeleteSimulation(sim.id)}>
+                      <DeleteIcon color="error" />
+                    </IconButton>
+                  </Tooltip>
+                </Stack>
               }
               sx={{
                 bgcolor: idx % 2 === 0 ? "#fff" : "#fbe9e7",
@@ -245,4 +197,4 @@ const HistoryView: React.FC = () => {
   );
 };
 
-export default HistoryView;
+export default SimulationSaves;

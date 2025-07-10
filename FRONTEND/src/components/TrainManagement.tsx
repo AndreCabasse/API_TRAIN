@@ -84,25 +84,40 @@ const TrainManagement: React.FC = () => {
 
   // On mount: load last simulation or fallback to current trains, and load depots
   useEffect(() => {
-    const fetchLastSimulation = async () => {
-      try {
-        const sims = await userApi.getMySimulations();
-        if (sims.length > 0) {
-          const last = sims[sims.length - 1];
-          if (last.data?.trains) {
-            setTrains(last.data.trains);
-            return;
-          }
-        }
-        await loadTrains(); // fallback if no saved simulation
-      } catch {
-        await loadTrains();
+    const fetchTrains = async () => {
+      // IF a simulation was loaded from localStorage, use it
+      // This allows users to load a saved simulation without needing to fetch from the API
+      const loaded = localStorage.getItem("loadedSimulation");
+      if (loaded) {
+        try {
+          const data = JSON.parse(loaded);
+          if (data.trains) setTrains(data.trains);
+          localStorage.removeItem("loadedSimulation");
+          return;
+        } catch {}
       }
+      // Otherwise, fetch trains from the API
+      await loadTrains();
     };
-    fetchLastSimulation();
+    fetchTrains();
     loadDepots();
     // eslint-disable-next-line
   }, []);
+
+  useEffect(() => {
+  const onSimulationLoaded = () => {
+    const loaded = localStorage.getItem("loadedSimulation");
+    if (loaded) {
+      try {
+        const data = JSON.parse(loaded);
+        if (data.trains) setTrains(data.trains);
+        localStorage.removeItem("loadedSimulation");
+      } catch {}
+    }
+  };
+  window.addEventListener("simulationLoaded", onSimulationLoaded);
+  return () => window.removeEventListener("simulationLoaded", onSimulationLoaded);
+}, []);
 
   /**
    * Save the current simulation to the backend (auto-save after changes).
@@ -206,7 +221,7 @@ const TrainManagement: React.FC = () => {
         await trainApi.deleteTrain(trainId);
         const updatedTrains = await trainApi.getTrains();
         setTrains(updatedTrains);
-        await saveCurrentSimulation(updatedTrains);
+        //await saveCurrentSimulation(updatedTrains);
         showSnackbar(`${t('train_deleted', language) || 'Train deleted'} "${trainName}"`, 'success');
       } catch (error) {
         showSnackbar(t('delete_error', language) || 'Error while deleting', 'error');
@@ -244,7 +259,7 @@ const TrainManagement: React.FC = () => {
       setOpenDialog(false);
       const updatedTrains = await trainApi.getTrains();
       setTrains(updatedTrains);
-      await saveCurrentSimulation(updatedTrains);
+      //await saveCurrentSimulation(updatedTrains);
     } catch (error: any) {
       // Handle depot conflict error with suggestions
       if (error && error.isDepotConflict && error.depots_disponibles) {

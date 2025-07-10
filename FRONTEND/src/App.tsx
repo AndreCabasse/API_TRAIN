@@ -69,7 +69,8 @@ function MainApp() {
       case "profile":
         return <ProfileView />;
       case "history":
-        return <HistoryView />;
+        //return <HistoryView />;
+        return <HistoryView onLoadSimulation={() => setActiveTab("trains")} />;
       default:
         return <Dashboard />;
     }
