@@ -120,20 +120,6 @@ const TrainManagement: React.FC = () => {
 }, []);
 
   /**
-   * Save the current simulation to the backend (auto-save after changes).
-   */
-  const saveCurrentSimulation = async (trainsToSave: Train[]) => {
-    try {
-      await userApi.saveSimulation({
-        name: "Simulation auto",
-        data: { trains: trainsToSave, date: new Date().toISOString() },
-      });
-    } catch {
-      // Optionally show an error
-    }
-  };
-
-  /**
    * Load all trains from the API.
    */
   const loadTrains = async () => {
