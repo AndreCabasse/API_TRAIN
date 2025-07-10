@@ -1,0 +1,15 @@
+/* Cluster marker custom pour MapView */
+.custom-cluster-icon-inner {
+  background: #ffcdd2;
+  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #b71c1c;
+  color: #880808;
+  font-weight: bold;
+  font-size: 1.1em;
+  box-shadow: 0 2px 8px rgba(200,0,0,0.15);
+}
