@@ -633,6 +633,11 @@ def add_locomotive_to_game(voie: int, direction: str = "left"):
         raise HTTPException(status_code=400, detail=error)
     return {"success": True, "state": game_state}
 
+class MoveAction(BaseModel):
+    voie_source: int
+    wagon_idx: int
+    voie_cible: int
+
 @app.post("/game/move-wagon")
 def move_wagon_in_game(action: MoveAction):
     """
@@ -641,9 +646,10 @@ def move_wagon_in_game(action: MoveAction):
     Moves a wagon from one track to another, respecting game rules
     about which wagons can be moved (typically only end wagons).
     """
-    success, error = deplacer_wagon(game_state, action.voie_source, action.wagon_idx, action.voie_cible)
+    global game_state
+    success, error_code = deplacer_wagon(game_state, action.voie_source, action.wagon_idx, action.voie_cible)
     if not success:
-        raise HTTPException(status_code=400, detail=error)
+        return error_response(f"Déplacement impossible: {error_code}", 400)
     return {"success": True, "state": game_state}
 
 @app.post("/game/swap-wagon")

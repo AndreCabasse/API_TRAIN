@@ -297,6 +297,8 @@ export const TRANSLATIONS = {
         "login_error": {"fr": "Erreur de connexion","en": "Login error","da": "Login-fejl"},
         "register_error": {"fr": "Erreur d'inscription","en": "Registration error","da": "Fejl ved oprettelse"},
         "date_and_time": { "fr": "Date et heure", "en": "Date and time", "da": "Dato og tid" },
+        "wagon_moved_success": {"fr": "Wagon déplacé avec succès","en": "Wagon moved successfully","da": "Vogn flyttet"},
+        "wagon_move_error": {"fr": "Erreur lors du déplacement du wagon","en": "Error while moving wagon","da": "Fejl ved flytning af vogn"},
         "formation_direction": { "fr": "Direction de la formation", "en": "Coach Formation direction", "da": "Coach Formation retning" },
         "normal_direction": { "fr": "Direction normale", "en": "Normal direction", "da": "Normal retning" },
         "reverse_direction": { "fr": "Direction inversée", "en": "Reverse direction", "da": "Omvendt retning" },

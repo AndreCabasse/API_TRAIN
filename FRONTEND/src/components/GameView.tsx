@@ -15,7 +15,8 @@ import {
   Snackbar,
   Tooltip,
   IconButton,
-  Divider
+  Divider,
+  Menu
 } from '@mui/material';
 import { useLanguage } from '../contexts/LanguageContext';
 import { t } from '../utils/translations';
@@ -26,6 +27,7 @@ import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import TrainIcon from '@mui/icons-material/Train';
 import AutorenewIcon from '@mui/icons-material/Autorenew';
+import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
 
 import locoImg from '../assets/Vectron.png';
 import wagon1LeftImg from '../assets/wagon_1_left.png';
@@ -81,6 +83,13 @@ const GameView: React.FC = () => {
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
   const [trackCount, setTrackCount] = useState<number>(4);
   const [coachDirection, setCoachDirection] = useState<'normal' | 'reverse'>('normal');
+
+  // Pour le menu de déplacement de wagon
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [moveMenu, setMoveMenu] = useState<{track: number, idx: number} | null>(null);
+
+  // Pour le drag & drop
+  const [dragged, setDragged] = useState<{track: number, idx: number} | null>(null);
 
   useEffect(() => {
     const initialTracks: any = {};
@@ -144,6 +153,48 @@ const GameView: React.FC = () => {
     } catch (error: any) {
       showSnackbar(error.response?.data?.detail || t('element_move_error', language), 'error');
     }
+  };
+
+  const handleMoveWagonToTrack = async (trackFrom: number, wagonIdx: number, trackTo: number) => {
+    try {
+      const result = await trainApi.moveWagonInGame(trackFrom, wagonIdx, trackTo);
+      setGameState(result.state);
+      showSnackbar(t('wagon_moved_success', language) || "Wagon déplacé avec succès", 'success');
+    } catch (error: any) {
+      showSnackbar(error.response?.data?.detail || t('wagon_move_error', language) || "Erreur lors du déplacement du wagon", 'error');
+    }
+  };
+
+  // Ouvre le menu de déplacement
+  const handleOpenMoveMenu = (event: React.MouseEvent<HTMLElement>, track: number, idx: number) => {
+    setAnchorEl(event.currentTarget);
+    setMoveMenu({ track, idx });
+  };
+  // Ferme le menu de déplacement
+  const handleCloseMoveMenu = () => {
+    setAnchorEl(null);
+    setMoveMenu(null);
+  };
+  // Sélectionne la voie de destination
+  const handleSelectMoveTrack = async (toTrack: number) => {
+    if (moveMenu) {
+      await handleMoveWagonToTrack(moveMenu.track, moveMenu.idx, toTrack);
+      handleCloseMoveMenu();
+    }
+  };
+
+  // Drag & Drop handlers
+  const handleDragStart = (track: number, idx: number) => {
+    setDragged({ track, idx });
+  };
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+  const handleDrop = async (toTrack: number) => {
+    if (dragged && dragged.track !== toTrack) {
+      await handleMoveWagonToTrack(dragged.track, dragged.idx, toTrack);
+    }
+    setDragged(null);
   };
 
   const getWagonTypeLabel = (type: string) => {
@@ -248,6 +299,8 @@ const GameView: React.FC = () => {
               width: '100%',
               minWidth: 0,
             }}
+            onDragOver={handleDragOver}
+            onDrop={() => handleDrop(trackNumber)}
           >
             {elements.length === 0 ? (
               <Typography color="textSecondary">{t('empty_track', language)}</Typography>
@@ -255,6 +308,8 @@ const GameView: React.FC = () => {
               elements.map((element, index) => (
                 <Box
                   key={index}
+                  draggable
+                  onDragStart={() => handleDragStart(trackNumber, index)}
                   sx={{
                     width: element.type === 'locomotive' ? 150 : 110,
                     height: 120,
@@ -275,6 +330,25 @@ const GameView: React.FC = () => {
                     }
                   }}
                 >
+                  {/* Icône de transfert en haut à gauche */}
+                  <Tooltip title={t('move_wagon', language) || "Déplacer"}>
+                    <IconButton
+                      size="small"
+                      sx={{
+                        position: 'absolute',
+                        top: 4,
+                        left: 4,
+                        zIndex: 3,
+                        background: '#fff',
+                        boxShadow: 2,
+                        opacity: 0.8,
+                        '&:hover': { opacity: 1, color: accentPalette.blue }
+                      }}
+                      onClick={(e) => handleOpenMoveMenu(e, trackNumber, index)}
+                    >
+                      <CompareArrowsIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
                   <img
                     src={getElementImage(element)}
                     alt={element.type === 'locomotive' ? t('locomotive', language) : `${t('wagon', language)} ${element.type_wagon}`}
@@ -286,18 +360,20 @@ const GameView: React.FC = () => {
                     }}
                   />
                   {element.type === 'wagon' && (
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        mt: 0.5,
-                        color: accentPalette.blue,
-                        fontWeight: 700,
-                        letterSpacing: 0.5,
-                        textShadow: '0 1px 4px #fff'
-                      }}
-                    >
-                      {getWagonTypeLabel(element.type_wagon)}
-                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          color: accentPalette.blue,
+                          fontWeight: 700,
+                          letterSpacing: 0.5,
+                          textShadow: '0 1px 4px #fff',
+                          mr: 1
+                        }}
+                      >
+                        {getWagonTypeLabel(element.type_wagon)}
+                      </Typography>
+                    </Box>
                   )}
                   {element.type === 'locomotive' && (
                     <Typography
@@ -381,6 +457,19 @@ const GameView: React.FC = () => {
 
   return (
     <>
+      {/* Menu pour déplacer un wagon */}
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleCloseMoveMenu}
+      >
+        {moveMenu && TRACK_NUMBERS.slice(0, trackCount).filter(num => num !== moveMenu.track).map(num => (
+          <MenuItem key={num} onClick={() => handleSelectMoveTrack(num)}>
+            {t('track', language)} {num}
+          </MenuItem>
+        ))}
+      </Menu>
+
       <Container
         maxWidth="xl"
         sx={{
