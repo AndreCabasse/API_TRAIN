@@ -853,3 +853,36 @@ def root():
         "description": "API for managing train depot operations, scheduling, and optimization"
     }
 
+@app.post("/restore-simulation")
+def restore_simulation(data: dict = Body(...)):
+    from datetime import datetime
+    simulation.reset()
+    trains_data = data.get("trains", [])
+    restored = 0
+    for train_dict in trains_data:
+        try:
+            arrivee = train_dict.get("arrivee")
+            depart = train_dict.get("depart")
+            if isinstance(arrivee, str):
+                arrivee = datetime.fromisoformat(arrivee)
+            if isinstance(depart, str):
+                depart = datetime.fromisoformat(depart)
+            train = Train(
+                id=train_dict.get("id"),
+                nom=train_dict.get("nom"),
+                wagons=train_dict.get("wagons"),
+                locomotives=train_dict.get("locomotives"),
+                arrivee=arrivee,
+                depart=depart,
+                depot=train_dict.get("depot"),
+                type=train_dict.get("type", "storage"),
+                electrique=train_dict.get("electrique", False),
+                locomotive_cote=train_dict.get("locomotive_cote", "left"),
+            )
+            simulation.ajouter_train(train, train.depot)
+            restored += 1
+        except Exception as e:
+            print("Erreur lors de l'import d'un train :", train_dict)
+            print("Exception :", e)
+            continue
+    return {"msg": f"Simulation restaurée ({restored} trains)"}

@@ -18,7 +18,7 @@ import ReplayIcon from "@mui/icons-material/Replay";
 import SaveIcon from "@mui/icons-material/Save";
 import { userApi } from "../services/userApi";
 import { trainApi } from "../services/api"; // ajoute ce import en haut
-
+import api from "../services/api";
 
 /**
  * SimulationSaves component.
@@ -87,14 +87,23 @@ const SimulationSaves: React.FC<{ onLoadSimulation?: () => void }> = ({ onLoadSi
    // }
   //};
 
-  const handleLoadSimulation = (sim: any) => {
-    if (sim?.data) {
-      localStorage.setItem("loadedSimulation", JSON.stringify(sim.data));
-      window.dispatchEvent(new Event("simulationLoaded")); // Ajoute cette ligne
+const handleLoadSimulation = async (sim: any) => {
+  if (sim?.data?.trains) {
+    try {
+      await api.post("/restore-simulation", { trains: sim.data.trains });
       if (onLoadSimulation) onLoadSimulation();
+    } catch (e: any) {
+      setError(
+        e?.response?.data?.error ||
+        e?.response?.data?.detail ||
+        e?.message ||
+        "Erreur lors de la restauration de la simulation"
+      );
+      // Affiche aussi l’erreur dans la console pour debug
+      console.error("Erreur restauration simulation", e?.response?.data, e);
     }
-  };
-
+  }
+};
   // If not authenticated, show warning
   if (notConnected) {
     return (
@@ -175,18 +184,6 @@ const SimulationSaves: React.FC<{ onLoadSimulation?: () => void }> = ({ onLoadSi
                       </Typography>
                     )}
                   </Stack>
-                }
-                secondary={
-                  <Box sx={{ mt: 1 }}>
-                    {sim.data &&
-                      Object.entries(sim.data)
-                        .filter(([k]) => k !== "date")
-                        .map(([k, v]) => (
-                          <Typography key={k} variant="body2" sx={{ color: "#555" }}>
-                            <b>{k}:</b> {typeof v === "object" ? JSON.stringify(v) : String(v)}
-                          </Typography>
-                        ))}
-                  </Box>
                 }
               />
             </ListItem>

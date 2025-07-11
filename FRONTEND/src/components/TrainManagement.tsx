@@ -83,26 +83,29 @@ const TrainManagement: React.FC = () => {
   });
 
   // On mount: load last simulation or fallback to current trains, and load depots
-  useEffect(() => {
-    const fetchTrains = async () => {
-      // IF a simulation was loaded from localStorage, use it
-      // This allows users to load a saved simulation without needing to fetch from the API
+useEffect(() => {
+  const fetchTrainsAndDepots = async () => {
+    if (localStorage.getItem("justLoadedSimulation") === "1") {
       const loaded = localStorage.getItem("loadedSimulation");
       if (loaded) {
         try {
           const data = JSON.parse(loaded);
           if (data.trains) setTrains(data.trains);
           localStorage.removeItem("loadedSimulation");
-          return;
         } catch {}
       }
-      // Otherwise, fetch trains from the API
-      await loadTrains();
-    };
-    fetchTrains();
-    loadDepots();
-    // eslint-disable-next-line
-  }, []);
+      localStorage.removeItem("justLoadedSimulation"); // Reset the flag
+      // Load depots only if we just loaded a simulation
+      await loadDepots();
+      return;
+    }
+    // otherwise, load trains and depots normally
+    await loadTrains();
+    await loadDepots();
+  };
+  fetchTrainsAndDepots();
+  // eslint-disable-next-line
+}, []);
 
   useEffect(() => {
   const onSimulationLoaded = () => {
