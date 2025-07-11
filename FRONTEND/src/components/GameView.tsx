@@ -27,7 +27,6 @@ import AddCircleIcon from '@mui/icons-material/AddCircle';
 import TrainIcon from '@mui/icons-material/Train';
 import AutorenewIcon from '@mui/icons-material/Autorenew';
 
-// Import images from Layouts folder
 import locoImg from '../assets/Vectron.png';
 import wagon1LeftImg from '../assets/wagon_1_left.png';
 import wagon1RightImg from '../assets/wagon_1_right.png';
@@ -36,7 +35,6 @@ import wagon23RightImg from '../assets/wagon_2_3_right.png';
 import wagon4LeftImg from '../assets/wagon_4_left.png';
 import wagon4RightImg from '../assets/wagon_4_right.png';
 
-// Color palette for UI accents
 const accentPalette = {
   main: '#D32F2F',
   light: '#FF6659',
@@ -49,9 +47,6 @@ const accentPalette = {
   green: '#43a047'
 };
 
-/**
- * Normalize the direction string to 'left' or 'right'
- */
 const normalizeDirection = (dir: string) => {
   if (!dir) return 'left';
   const d = dir.toLowerCase();
@@ -59,9 +54,6 @@ const normalizeDirection = (dir: string) => {
   return 'left';
 };
 
-/**
- * Get the image for a train element (locomotive or wagon) based on its type and direction
- */
 const getElementImage = (element: any) => {
   if (element.type === 'locomotive') return locoImg;
   const direction = normalizeDirection(element.direction || element.sens || 'left');
@@ -78,10 +70,8 @@ const getElementImage = (element: any) => {
   }
 };
 
-/**
- * Main GameView component for the interactive train composition game.
- * Allows adding/removing/moving wagons and locomotives on tracks.
- */
+const TRACK_NUMBERS = [7, 8, 9, 11, 12, 13, 14];
+
 const GameView: React.FC = () => {
   const { language } = useLanguage();
   const [gameState, setGameState] = useState<any>({});
@@ -89,34 +79,23 @@ const GameView: React.FC = () => {
   const [selectedWagonType, setSelectedWagonType] = useState<string>('1');
   const [selectedDirection, setSelectedDirection] = useState<string>('left');
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
+  const [trackCount, setTrackCount] = useState<number>(4);
+  const [coachDirection, setCoachDirection] = useState<'normal' | 'reverse'>('normal');
 
-  // Load the game state from the API on mount
   useEffect(() => {
-    loadGameState();
-  }, []);
+    const initialTracks: any = {};
+    TRACK_NUMBERS.slice(0, trackCount).forEach((num) => {
+      initialTracks[num] = [];
+    });
+    setGameState(initialTracks);
+    setSelectedTrack(TRACK_NUMBERS[0]);
+    // eslint-disable-next-line
+  }, [trackCount]);
 
-  /**
-   * Fetch the current game state from the backend API
-   */
-  const loadGameState = async () => {
-    try {
-      const state = await trainApi.getGameState();
-      setGameState(state);
-    } catch (error) {
-      console.error('Error loading game state:', error);
-    }
-  };
-
-  /**
-   * Show a snackbar notification
-   */
   const showSnackbar = (message: string, severity: 'success' | 'error') => {
     setSnackbar({ open: true, message, severity });
   };
 
-  /**
-   * Add a wagon to the selected track with the selected type and direction
-   */
   const handleAddWagon = async () => {
     try {
       const result = await trainApi.addWagonToGame(selectedTrack, selectedWagonType, selectedDirection);
@@ -127,9 +106,6 @@ const GameView: React.FC = () => {
     }
   };
 
-  /**
-   * Add a locomotive to the selected track
-   */
   const handleAddLocomotive = async () => {
     try {
       const result = await trainApi.addLocomotiveToGame(selectedTrack);
@@ -140,9 +116,6 @@ const GameView: React.FC = () => {
     }
   };
 
-  /**
-   * Reset the game state to its initial state
-   */
   const handleResetGame = async () => {
     try {
       const result = await trainApi.resetGame();
@@ -153,9 +126,6 @@ const GameView: React.FC = () => {
     }
   };
 
-  /**
-   * Remove an element (wagon or locomotive) from a track at a given index
-   */
   const handleRemoveElement = async (trackNumber: number, elementIndex: number) => {
     try {
       const result = await trainApi.deleteElementFromGame(trackNumber, elementIndex);
@@ -166,9 +136,6 @@ const GameView: React.FC = () => {
     }
   };
 
-  /**
-   * Move an element left or right within a track
-   */
   const handleMoveElement = async (trackNumber: number, elementIndex: number, direction: 'left' | 'right') => {
     try {
       const result = await trainApi.swapWagonInGame(trackNumber, elementIndex, direction);
@@ -179,9 +146,6 @@ const GameView: React.FC = () => {
     }
   };
 
-  /**
-   * Get the label for a wagon type, translated
-   */
   const getWagonTypeLabel = (type: string) => {
     switch (type) {
       case '1': return t('wagon_type_1', language) || 'Type 1';
@@ -192,9 +156,59 @@ const GameView: React.FC = () => {
     }
   };
 
-  /**
-   * Render a single track with its elements (wagons/locomotives)
-   */
+  // Ajout d'une Coach formation complète avec choix du sens
+  const handleAddCoachFormation = async () => {
+    let formation = [
+      { type: 'locomotive' },
+      { type: 'wagon', type_wagon: '1', direction: 'right' },
+      { type: 'wagon', type_wagon: '2', direction: 'left' },
+      { type: 'wagon', type_wagon: '3', direction: 'left' },
+      { type: 'wagon', type_wagon: '4', direction: 'left' },
+      { type: 'wagon', type_wagon: '3', direction: 'right' },
+      { type: 'wagon', type_wagon: '2', direction: 'right' },
+      { type: 'wagon', type_wagon: '3', direction: 'right' },
+      { type: 'wagon', type_wagon: '2', direction: 'right' },
+      { type: 'wagon', type_wagon: '3', direction: 'right' },
+      { type: 'wagon', type_wagon: '2', direction: 'right' },
+      { type: 'wagon', type_wagon: '3', direction: 'right' },
+      { type: 'wagon', type_wagon: '2', direction: 'right' },
+      { type: 'wagon', type_wagon: '3', direction: 'right' },
+      { type: 'wagon', type_wagon: '2', direction: 'right' },
+      { type: 'wagon', type_wagon: '1', direction: 'left' },
+      { type: 'locomotive' }
+    ];
+    if (coachDirection === 'reverse') {
+      formation = [...formation].reverse().map(elem => {
+        if (elem.type === 'wagon') {
+          return {
+            type: 'wagon',
+            type_wagon: elem.type_wagon as string,
+            direction: elem.direction === 'left' ? 'right' : 'left'
+          };
+        }
+        return { type: 'locomotive' };
+      });
+    }
+    try {
+      let state = gameState;
+      for (const elem of formation) {
+        if (elem.type === 'locomotive') {
+          const result = await trainApi.addLocomotiveToGame(selectedTrack);
+          state = result.state;
+        } else {
+          const typeWagon = elem.type_wagon as string;
+          const direction = elem.direction as string;
+          const result = await trainApi.addWagonToGame(selectedTrack, typeWagon, direction);
+          state = result.state;
+        }
+      }
+      setGameState(state);
+      showSnackbar(t('coach_formation_added', language) || "Coach formation ajoutée !", 'success');
+    } catch (error: any) {
+      showSnackbar(error.response?.data?.detail || t('coach_formation_add_error', language) || "Erreur lors de l'ajout de la coach formation", 'error');
+    }
+  };
+
   const renderTrack = (trackNumber: number, elements: any[]) => {
     return (
       <Card
@@ -208,6 +222,7 @@ const GameView: React.FC = () => {
           '&:hover': { boxShadow: 16, borderColor: accentPalette.main },
           width: '100%',
         }}
+        key={trackNumber}
       >
         <CardContent sx={{ p: { xs: 1, sm: 2, md: 3 } }}>
           <Box display="flex" alignItems="center" mb={1}>
@@ -234,7 +249,6 @@ const GameView: React.FC = () => {
               minWidth: 0,
             }}
           >
-            {/* Show message if track is empty */}
             {elements.length === 0 ? (
               <Typography color="textSecondary">{t('empty_track', language)}</Typography>
             ) : (
@@ -261,7 +275,6 @@ const GameView: React.FC = () => {
                     }
                   }}
                 >
-                  {/* Train element image */}
                   <img
                     src={getElementImage(element)}
                     alt={element.type === 'locomotive' ? t('locomotive', language) : `${t('wagon', language)} ${element.type_wagon}`}
@@ -272,7 +285,6 @@ const GameView: React.FC = () => {
                       filter: element.type === 'locomotive' ? 'drop-shadow(0 0 8px #1976d2aa)' : 'drop-shadow(0 0 6px #ff980088)'
                     }}
                   />
-                  {/* Wagon type label */}
                   {element.type === 'wagon' && (
                     <Typography
                       variant="caption"
@@ -287,7 +299,6 @@ const GameView: React.FC = () => {
                       {getWagonTypeLabel(element.type_wagon)}
                     </Typography>
                   )}
-                  {/* Locomotive label */}
                   {element.type === 'locomotive' && (
                     <Typography
                       variant="caption"
@@ -302,7 +313,6 @@ const GameView: React.FC = () => {
                       {t('locomotive', language)}
                     </Typography>
                   )}
-                  {/* Delete button */}
                   <Tooltip title={t('delete', language)}>
                     <IconButton
                       size="small"
@@ -321,7 +331,6 @@ const GameView: React.FC = () => {
                       <DeleteIcon fontSize="small" />
                     </IconButton>
                   </Tooltip>
-                  {/* Move left button */}
                   <span>
                     <IconButton
                       size="small"
@@ -340,7 +349,6 @@ const GameView: React.FC = () => {
                       <ArrowBackIosNewIcon sx={{ fontSize: 16 }}/>
                     </IconButton>
                   </span>
-                  {/* Move right button */}
                   <span>
                     <IconButton
                       size="small"
@@ -363,7 +371,6 @@ const GameView: React.FC = () => {
               ))
             )}
           </Box>
-          {/* Track length indicator */}
           <Typography variant="caption" color="textSecondary" sx={{ mt: 1 }}>
             {t('length', language)}: {elements.reduce((sum, e) => sum + (e.type === 'locomotive' ? 19 : 14), 0)}m / 300m
           </Typography>
@@ -390,9 +397,54 @@ const GameView: React.FC = () => {
           width: '100%',
         }}
       >
+        {/* Titre principal */}
         <Typography variant="h4" gutterBottom fontWeight="bold" color={accentPalette.main} sx={{ letterSpacing: 1 }}>
           {t('game_title', language)}
         </Typography>
+
+        {/* Sélecteur du nombre de voies sous le titre, aligné à gauche */}
+        <Box sx={{ mb: 4 }}>
+          <Typography
+            variant="h6"
+            fontWeight="bold"
+            color={accentPalette.blue}
+            sx={{ letterSpacing: 1, mb: 1 }}
+          >
+            {t('number_of_tracks', language) || "Nombre de voies"}
+          </Typography>
+          <FormControl
+            size="small"
+            sx={{
+              minWidth: 80,
+              maxWidth: 100,
+              bgcolor: "#fff",
+              borderRadius: 2,
+              boxShadow: 1,
+              '& .MuiSelect-select': { textAlign: 'center', fontWeight: 700, fontSize: 18, py: 1 }
+            }}
+          >
+            <Select
+              value={trackCount}
+              onChange={(e) => setTrackCount(Number(e.target.value))}
+              displayEmpty
+              sx={{
+                borderRadius: 2,
+                fontWeight: 700,
+                fontSize: 18,
+                px: 2,
+                py: 0.5,
+                border: `1.5px solid ${accentPalette.light}`,
+                textAlign: 'center'
+              }}
+            >
+              {[2, 3, 4, 5, 6].map((n) => (
+                <MenuItem key={n} value={n} sx={{ justifyContent: 'center', fontWeight: 700, fontSize: 18 }}>
+                  {n}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
 
         <Grid container spacing={3}>
           {/* Track display */}
@@ -401,9 +453,11 @@ const GameView: React.FC = () => {
               {t('track_state', language)}
             </Typography>
             <Box sx={{ width: '100%', minWidth: 0 }}>
-              {Object.entries(gameState).map(([trackNumber, elements]: [string, any]) =>
-                renderTrack(parseInt(trackNumber), elements)
-              )}
+              {Object.entries(gameState)
+                .slice(0, trackCount)
+                .map(([trackNumber, elements]: [string, any]) =>
+                  renderTrack(parseInt(trackNumber), elements)
+                )}
             </Box>
           </Grid>
 
@@ -434,13 +488,14 @@ const GameView: React.FC = () => {
                   <InputLabel sx={{ color: "#23272F", bgcolor: "#fff", px: 0.5, borderRadius: 1, fontWeight: 600 }}>{t('select_track', language)}</InputLabel>
                   <Select
                     value={selectedTrack}
-                    onChange={(e) => setSelectedTrack(e.target.value as number)}
+                    onChange={(e) => setSelectedTrack(Number(e.target.value))}
                     sx={{ bgcolor: "#fff", borderRadius: 2 }}
                   >
-                    <MenuItem value={7}>7</MenuItem>
-                    <MenuItem value={8}>8</MenuItem>
-                    <MenuItem value={9}>9 ⚡</MenuItem>
-                    <MenuItem value={11}>11</MenuItem>
+                    {TRACK_NUMBERS.slice(0, trackCount).map((trackNum) => (
+                      <MenuItem key={trackNum} value={trackNum}>
+                        {trackNum}{trackNum === 9 && " ⚡"}
+                      </MenuItem>
+                    ))}
                   </Select>
                 </FormControl>
 
@@ -497,6 +552,43 @@ const GameView: React.FC = () => {
                 >
                   {t('add_wagon_button', language)}
                 </Button>
+
+                {/* Section dédiée à la formation coach */}
+                <Box sx={{ mb: 3, p: 2, bgcolor: "#f5f5f5", borderRadius: 2, boxShadow: 1 }}>
+                  <Typography variant="subtitle1" fontWeight="bold" color={accentPalette.blue} sx={{ mb: 1 }}>
+                    {t('add_coach_formation', language) || "Ajouter une formation complète"}
+                  </Typography>
+                  <FormControl fullWidth sx={{ mb: 2 }}>
+                    <InputLabel id="coach-direction-label">{t('formation_direction', language) || "Sens de la formation"}</InputLabel>
+                    <Select
+                      labelId="coach-direction-label"
+                      value={coachDirection}
+                      label={t('formation_direction', language) || "Sens de la formation"}
+                      onChange={e => setCoachDirection(e.target.value as 'normal' | 'reverse')}
+                      sx={{ bgcolor: "#fff", borderRadius: 2 }}
+                    >
+                      <MenuItem value="normal">{t('normal_direction', language) || "Sens normal"}</MenuItem>
+                      <MenuItem value="reverse">{t('reverse_direction', language) || "Sens inverse"}</MenuItem>
+                    </Select>
+                  </FormControl>
+                  <Button
+                    variant="contained"
+                    fullWidth
+                    onClick={handleAddCoachFormation}
+                    sx={{
+                      background: accentPalette.blue,
+                      color: "#fff",
+                      fontWeight: "bold",
+                      boxShadow: 2,
+                      borderRadius: 2,
+                      fontSize: 16,
+                      '&:hover': { background: accentPalette.dark }
+                    }}
+                    startIcon={<TrainIcon />}
+                  >
+                    {t('add_coach_formation', language) || "Ajouter Coach formation"}
+                  </Button>
+                </Box>
 
                 {/* Add locomotive controls */}
                 <Typography variant="subtitle1" gutterBottom sx={{ mt: 2, color: accentPalette.blue }}>
