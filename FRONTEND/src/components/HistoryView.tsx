@@ -20,12 +20,15 @@ import SaveIcon from "@mui/icons-material/Save";
 import { userApi } from "../services/userApi";
 import { trainApi } from "../services/api";
 import api from "../services/api";
+import { useLanguage } from "../contexts/LanguageContext";
+import { t } from "../utils/translations";
 
 const SimulationSaves: React.FC<{ onLoadSimulation?: () => void }> = ({ onLoadSimulation }) => {
   const [simulations, setSimulations] = useState<any[]>([]);
   const [notConnected, setNotConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saveName, setSaveName] = useState("");
+  const { language } = useLanguage();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -40,14 +43,14 @@ const SimulationSaves: React.FC<{ onLoadSimulation?: () => void }> = ({ onLoadSi
       .then(setSimulations)
       .catch((e: any) => {
         setSimulations([]);
-        setError(e?.response?.data?.detail || "Error loading saves");
+        setError(e?.response?.data?.detail || t("error_loading_saves", language));
       });
-  }, []);
+  }, [language]);
 
   const handleSaveSimulation = async () => {
     setError(null);
     if (!saveName.trim()) {
-      setError("Please provide a name for the save.");
+      setError(t("please_provide_save_name", language));
       return;
     }
     try {
@@ -57,7 +60,7 @@ const SimulationSaves: React.FC<{ onLoadSimulation?: () => void }> = ({ onLoadSi
       setSaveName("");
       userApi.getMySimulations().then(setSimulations);
     } catch (e: any) {
-      setError(e?.response?.data?.detail || "Error saving simulation");
+      setError(e?.response?.data?.detail || t("error_saving_simulation", language));
     }
   };
 
@@ -67,7 +70,7 @@ const SimulationSaves: React.FC<{ onLoadSimulation?: () => void }> = ({ onLoadSi
       await userApi.deleteSimulation(id);
       userApi.getMySimulations().then(setSimulations);
     } catch (e: any) {
-      setError(e?.response?.data?.detail || "Error deleting save");
+      setError(e?.response?.data?.detail || t("error_deleting_save", language));
     }
   };
 
@@ -81,7 +84,7 @@ const SimulationSaves: React.FC<{ onLoadSimulation?: () => void }> = ({ onLoadSi
           e?.response?.data?.error ||
           e?.response?.data?.detail ||
           e?.message ||
-          "Erreur lors de la restauration de la simulation"
+          t("error_restoring_simulation", language)
         );
         console.error("Erreur restauration simulation", e?.response?.data, e);
       }
@@ -100,7 +103,7 @@ const SimulationSaves: React.FC<{ onLoadSimulation?: () => void }> = ({ onLoadSi
         }}
       >
         <Alert severity="warning" sx={{ mb: 3 }}>
-          You must be logged in to access saves.
+          {t("must_be_logged_in_to_access_saves", language)}
         </Alert>
       </Box>
     );
@@ -117,10 +120,10 @@ const SimulationSaves: React.FC<{ onLoadSimulation?: () => void }> = ({ onLoadSi
     >
       <Box maxWidth={700} mx="auto">
         <Typography variant="h4" fontWeight="bold" gutterBottom align="center" color="primary">
-          Simulation History
+          {t("simulation_history", language)}
         </Typography>
         <Typography variant="subtitle1" align="center" color="text.secondary" mb={4}>
-          Save, restore and manage all your simulation states easily.
+          {t("save_restore_manage_simulations", language)}
         </Typography>
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
@@ -137,11 +140,11 @@ const SimulationSaves: React.FC<{ onLoadSimulation?: () => void }> = ({ onLoadSi
           }}
         >
           <Typography variant="h6" gutterBottom>
-            Save current simulation
+            {t("save_current_simulation", language)}
           </Typography>
           <Stack direction="row" spacing={2} alignItems="center" mt={2}>
             <TextField
-              label="Save name"
+              label={t("save_name", language)}
               value={saveName}
               onChange={e => setSaveName(e.target.value)}
               size="small"
@@ -161,7 +164,7 @@ const SimulationSaves: React.FC<{ onLoadSimulation?: () => void }> = ({ onLoadSi
                 "&:hover": { background: "#1565c0" },
               }}
             >
-              Save
+              {t("save", language)}
             </Button>
           </Stack>
         </Paper>
@@ -175,12 +178,12 @@ const SimulationSaves: React.FC<{ onLoadSimulation?: () => void }> = ({ onLoadSi
           }}
         >
           <Typography variant="h6" gutterBottom>
-            My saves
+            {t("my_saves", language)}
           </Typography>
           <List>
             {simulations.length === 0 && (
               <ListItem>
-                <ListItemText primary="No saves" />
+                <ListItemText primary={t("no_saves", language)} />
               </ListItem>
             )}
             {simulations.map((sim, idx) => {
@@ -191,7 +194,7 @@ const SimulationSaves: React.FC<{ onLoadSimulation?: () => void }> = ({ onLoadSi
                   divider
                   secondaryAction={
                     <Stack direction="row" spacing={1}>
-                      <Tooltip title="Load this save">
+                      <Tooltip title={t("load_this_save", language)}>
                         <IconButton
                           edge="end"
                           color="primary"
@@ -205,7 +208,7 @@ const SimulationSaves: React.FC<{ onLoadSimulation?: () => void }> = ({ onLoadSi
                           <ReplayIcon />
                         </IconButton>
                       </Tooltip>
-                      <Tooltip title="Delete">
+                      <Tooltip title={t("delete", language)}>
                         <IconButton
                           edge="end"
                           onClick={() => handleDeleteSimulation(sim.id)}
@@ -268,13 +271,13 @@ const SimulationSaves: React.FC<{ onLoadSimulation?: () => void }> = ({ onLoadSi
                             fontWeight: 500,
                           }}
                         >
-                          Latest
+                          {t("latest", language)}
                         </Box>
                       )}
                       <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
-                        {sim.data?.date && new Date(sim.data.date).toLocaleString()}
+                        {sim.data?.date && new Date(sim.data.date).toLocaleString(language)}
                         {sim.data?.trains && (
-                          <> &nbsp;•&nbsp; {sim.data.trains.length} trains</>
+                          <> &nbsp;•&nbsp; {sim.data.trains.length} {t("trains", language)}</>
                         )}
                       </Typography>
                     </Box>

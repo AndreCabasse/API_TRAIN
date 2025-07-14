@@ -81,7 +81,10 @@ const GameView: React.FC = () => {
   const [selectedWagonType, setSelectedWagonType] = useState<string>('1');
   const [selectedDirection, setSelectedDirection] = useState<string>('left');
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
-  const [trackCount, setTrackCount] = useState<number>(4);
+  const [trackCount, setTrackCountState] = useState<number>(() => {
+    const saved = localStorage.getItem('trackCount');
+    return saved ? Number(saved) : 4;
+  });
   const [coachDirection, setCoachDirection] = useState<'normal' | 'reverse'>('normal');
 
   // Pour le menu de déplacement de wagon
@@ -91,15 +94,21 @@ const GameView: React.FC = () => {
   // Pour le drag & drop
   const [dragged, setDragged] = useState<{track: number, idx: number} | null>(null);
 
+    // Synchroniser trackCount avec localStorage
+  const setTrackCount = (n: number) => {
+    setTrackCountState(n);
+    localStorage.setItem('trackCount', String(n));
+  };
+
+  // Charger l'état du jeu depuis l'API au montage
   useEffect(() => {
-    const initialTracks: any = {};
-    TRACK_NUMBERS.slice(0, trackCount).forEach((num) => {
-      initialTracks[num] = [];
+    trainApi.getGameState().then((state) => {
+      setGameState(state);
+      // Optionnel : setSelectedTrack selon les voies présentes
+      const tracks = Object.keys(state);
+      if (tracks.length > 0) setSelectedTrack(Number(tracks[0]));
     });
-    setGameState(initialTracks);
-    setSelectedTrack(TRACK_NUMBERS[0]);
-    // eslint-disable-next-line
-  }, [trackCount]);
+  }, [trackCount]); 
 
   const showSnackbar = (message: string, severity: 'success' | 'error') => {
     setSnackbar({ open: true, message, severity });
@@ -125,10 +134,12 @@ const GameView: React.FC = () => {
     }
   };
 
+  // Lors du reset, remettre trackCount à 4 et l'enregistrer
   const handleResetGame = async () => {
     try {
       const result = await trainApi.resetGame();
       setGameState(result.state);
+      setTrackCount(4); // <-- reset aussi le nombre de voies
       showSnackbar(t('game_reset', language), 'success');
     } catch (error: any) {
       showSnackbar(t('reset_error', language), 'error');
