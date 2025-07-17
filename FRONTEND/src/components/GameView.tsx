@@ -36,6 +36,8 @@ import wagon23LeftImg from '../assets/wagon_2_3_left.png';
 import wagon23RightImg from '../assets/wagon_2_3_right.png';
 import wagon4LeftImg from '../assets/wagon_4_left.png';
 import wagon4RightImg from '../assets/wagon_4_right.png';
+import cabcarLeftImg from '../assets/cabcar_left.png';
+import cabcarRightImg from '../assets/cabcar_right.png';
 
 const accentPalette = {
   main: '#D32F2F',
@@ -67,6 +69,8 @@ const getElementImage = (element: any) => {
       return direction === 'right' ? wagon23RightImg : wagon23LeftImg;
     case '4':
       return direction === 'right' ? wagon4RightImg : wagon4LeftImg;
+    case 'cabcar':
+      return direction === 'right' ? cabcarRightImg : cabcarLeftImg;
     default:
       return direction === 'right' ? wagon1RightImg : wagon1LeftImg;
   }
@@ -94,7 +98,7 @@ const GameView: React.FC = () => {
   // Pour le drag & drop
   const [dragged, setDragged] = useState<{track: number, idx: number} | null>(null);
 
-    // Synchroniser trackCount avec localStorage
+  // Synchroniser trackCount avec localStorage
   const setTrackCount = (n: number) => {
     setTrackCountState(n);
     localStorage.setItem('trackCount', String(n));
@@ -214,6 +218,7 @@ const GameView: React.FC = () => {
       case '2': return t('wagon_type_2', language) || 'Type 2';
       case '3': return t('wagon_type_3', language) || 'Type 3';
       case '4': return t('wagon_type_4', language) || 'Type 4';
+      case 'cabcar': return t('wagon_type_cabcar', language) || 'Cab Car';
       default: return t('wagon', language);
     }
   };
@@ -223,19 +228,19 @@ const GameView: React.FC = () => {
     let formation = [
       { type: 'locomotive' },
       { type: 'wagon', type_wagon: '1', direction: 'right' },
+      { type: 'wagon', type_wagon: '2', direction: 'right' },
+      { type: 'wagon', type_wagon: '3', direction: 'right' },
+      { type: 'wagon', type_wagon: '4', direction: 'left' },
+      { type: 'wagon', type_wagon: '3', direction: 'left' },
       { type: 'wagon', type_wagon: '2', direction: 'left' },
       { type: 'wagon', type_wagon: '3', direction: 'left' },
-      { type: 'wagon', type_wagon: '4', direction: 'left' },
-      { type: 'wagon', type_wagon: '3', direction: 'right' },
-      { type: 'wagon', type_wagon: '2', direction: 'right' },
-      { type: 'wagon', type_wagon: '3', direction: 'right' },
-      { type: 'wagon', type_wagon: '2', direction: 'right' },
-      { type: 'wagon', type_wagon: '3', direction: 'right' },
-      { type: 'wagon', type_wagon: '2', direction: 'right' },
-      { type: 'wagon', type_wagon: '3', direction: 'right' },
-      { type: 'wagon', type_wagon: '2', direction: 'right' },
-      { type: 'wagon', type_wagon: '3', direction: 'right' },
-      { type: 'wagon', type_wagon: '2', direction: 'right' },
+      { type: 'wagon', type_wagon: '2', direction: 'left' },
+      { type: 'wagon', type_wagon: '3', direction: 'left' },
+      { type: 'wagon', type_wagon: '2', direction: 'left' },
+      { type: 'wagon', type_wagon: '3', direction: 'left' },
+      { type: 'wagon', type_wagon: '2', direction: 'left' },
+      { type: 'wagon', type_wagon: '3', direction: 'left' },
+      { type: 'wagon', type_wagon: '2', direction: 'left' },
       { type: 'wagon', type_wagon: '1', direction: 'left' },
       { type: 'locomotive' }
     ];
@@ -271,6 +276,7 @@ const GameView: React.FC = () => {
     }
   };
 
+  // --- MODIFICATION : Séparation des dimensions carte/image ---
   const renderTrack = (trackNumber: number, elements: any[]) => {
     return (
       <Card
@@ -316,146 +322,172 @@ const GameView: React.FC = () => {
             {elements.length === 0 ? (
               <Typography color="textSecondary">{t('empty_track', language)}</Typography>
             ) : (
-              elements.map((element, index) => (
-                <Box
-                  key={index}
-                  draggable
-                  onDragStart={() => handleDragStart(trackNumber, index)}
-                  sx={{
-                    width: element.type === 'locomotive' ? 150 : 110,
-                    height: 120,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderRadius: 3,
-                    background: 'rgba(255,255,255,0.95)',
-                    boxShadow: '0 2px 8px #bdbdbd55',
-                    p: 0,
-                    position: 'relative',
-                    mx: 1,
-                    transition: 'box-shadow 0.2s, transform 0.2s',
-                    '&:hover': {
-                      boxShadow: '0 4px 24px #d32f2f33',
-                      transform: 'scale(1.04)'
-                    }
-                  }}
-                >
-                  {/* Icône de transfert en haut à gauche */}
-                  <Tooltip title={t('move_wagon', language) || "Déplacer"}>
-                    <IconButton
-                      size="small"
-                      sx={{
-                        position: 'absolute',
-                        top: 4,
-                        left: 4,
-                        zIndex: 3,
-                        background: '#fff',
-                        boxShadow: 2,
-                        opacity: 0.8,
-                        '&:hover': { opacity: 1, color: accentPalette.blue }
-                      }}
-                      onClick={(e) => handleOpenMoveMenu(e, trackNumber, index)}
-                    >
-                      <CompareArrowsIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                  <img
-                    src={getElementImage(element)}
-                    alt={element.type === 'locomotive' ? t('locomotive', language) : `${t('wagon', language)} ${element.type_wagon}`}
-                    style={{
-                      width: element.type === 'locomotive' ? 150 : 110,
-                      height: 80,
-                      objectFit: 'contain',
-                      filter: element.type === 'locomotive' ? 'drop-shadow(0 0 8px #1976d2aa)' : 'drop-shadow(0 0 6px #ff980088)'
+              elements.map((element, index) => {
+                // Séparation des dimensions carte/image
+                let cardWidth = 110, cardHeight = 120;
+                let imgWidth = 100, imgHeight = 80;
+                if (element.type === 'locomotive') {
+                  cardWidth = 200; cardHeight = 120;
+                  imgWidth = 200; imgHeight = 70;
+                } else if (element.type_wagon === 'cabcar') {
+                  cardWidth = 200; cardHeight = 110;
+                  imgWidth = 250; imgHeight = 400;
+                } else if (element.type_wagon === '1') {
+                  cardWidth = 180; cardHeight = 100;
+                  imgWidth = 170; imgHeight = 70;
+                }
+                  // AJOUTE ICI POUR LES AUTRES TYPES
+                else if (element.type_wagon === '2' || element.type_wagon === '3') {
+                  cardWidth = 160; cardHeight = 100;
+                  imgWidth = 140; imgHeight = 70;
+                } else if (element.type_wagon === '4') {
+                  cardWidth = 170; cardHeight = 110;
+                  imgWidth = 150; imgHeight = 80;
+                }
+
+                return (
+                  <Box
+                    key={index}
+                    draggable
+                    onDragStart={() => handleDragStart(trackNumber, index)}
+                    sx={{
+                      width: cardWidth,
+                      height: cardHeight,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderRadius: 3,
+                      background: 'rgba(255,255,255,0.95)',
+                      boxShadow: '0 2px 8px #bdbdbd55',
+                      p: 0,
+                      position: 'relative',
+                      mx: 1,
+                      transition: 'box-shadow 0.2s, transform 0.2s',
+                      '&:hover': {
+                        boxShadow: '0 4px 24px #d32f2f33',
+                        transform: 'scale(1.04)'
+                      }
                     }}
-                  />
-                  {element.type === 'wagon' && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
+                  >
+                    {/* Icône de transfert en haut à gauche */}
+                    <Tooltip title={t('move_wagon', language) || "Déplacer"}>
+                      <IconButton
+                        size="small"
+                        sx={{
+                          position: 'absolute',
+                          top: 4,
+                          left: 4,
+                          zIndex: 3,
+                          background: '#fff',
+                          boxShadow: 2,
+                          opacity: 0.8,
+                          '&:hover': { opacity: 1, color: accentPalette.blue }
+                        }}
+                        onClick={(e) => handleOpenMoveMenu(e, trackNumber, index)}
+                      >
+                        <CompareArrowsIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <img
+                      src={getElementImage(element)}
+                      alt={element.type === 'locomotive' ? t('locomotive', language) : `${t('wagon', language)} ${element.type_wagon}`}
+                      style={{
+                        width: imgWidth,
+                        height: imgHeight,
+                        objectFit: 'contain',
+                        filter: element.type === 'locomotive'
+                          ? 'drop-shadow(0 0 8px #1976d2aa)'
+                          : 'drop-shadow(0 0 6px #ff980088)'
+                      }}
+                    />
+                    {element.type === 'wagon' && (
+                      <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            color: accentPalette.blue,
+                            fontWeight: 700,
+                            letterSpacing: 0.5,
+                            textShadow: '0 1px 4px #fff',
+                            mr: 1
+                          }}
+                        >
+                          {getWagonTypeLabel(element.type_wagon)}
+                        </Typography>
+                      </Box>
+                    )}
+                    {element.type === 'locomotive' && (
                       <Typography
                         variant="caption"
                         sx={{
-                          color: accentPalette.blue,
+                          mt: 0.5,
+                          color: accentPalette.green,
                           fontWeight: 700,
                           letterSpacing: 0.5,
-                          textShadow: '0 1px 4px #fff',
-                          mr: 1
+                          textShadow: '0 1px 4px #fff'
                         }}
                       >
-                        {getWagonTypeLabel(element.type_wagon)}
+                        {t('locomotive', language)}
                       </Typography>
-                    </Box>
-                  )}
-                  {element.type === 'locomotive' && (
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        mt: 0.5,
-                        color: accentPalette.green,
-                        fontWeight: 700,
-                        letterSpacing: 0.5,
-                        textShadow: '0 1px 4px #fff'
-                      }}
-                    >
-                      {t('locomotive', language)}
-                    </Typography>
-                  )}
-                  <Tooltip title={t('delete', language)}>
-                    <IconButton
-                      size="small"
-                      color="error"
-                      sx={{
-                        position: 'absolute',
-                        top: 4,
-                        right: 4,
-                        zIndex: 2,
-                        background: '#fff',
-                        boxShadow: 2,
-                        '&:hover': { background: accentPalette.light }
-                      }}
-                      onClick={() => handleRemoveElement(trackNumber, index)}
-                    >
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                  <span>
-                    <IconButton
-                      size="small"
-                      sx={{
-                        position: 'absolute',
-                        bottom: 4,
-                        left: 4,
-                        zIndex: 2,
-                        background: '#fff',
-                        boxShadow: 2,
-                        '&:hover': { background: accentPalette.blue, color: '#fff' }
-                      }}
-                      onClick={() => handleMoveElement(trackNumber, index, 'left')}
-                      disabled={index === 0}
-                    >
-                      <ArrowBackIosNewIcon sx={{ fontSize: 16 }}/>
-                    </IconButton>
-                  </span>
-                  <span>
-                    <IconButton
-                      size="small"
-                      sx={{
-                        position: 'absolute',
-                        bottom: 4,
-                        right: 4,
-                        zIndex: 2,
-                        background: '#fff',
-                        boxShadow: 2,
-                        '&:hover': { background: accentPalette.blue, color: '#fff' }
-                      }}
-                      onClick={() => handleMoveElement(trackNumber, index, 'right')}
-                      disabled={index === elements.length - 1}
-                    >
-                      <ArrowForwardIosIcon sx={{ fontSize: 16 }} />
-                    </IconButton>
-                  </span>
-                </Box>
-              ))
+                    )}
+                    <Tooltip title={t('delete', language)}>
+                      <IconButton
+                        size="small"
+                        color="error"
+                        sx={{
+                          position: 'absolute',
+                          top: 4,
+                          right: 4,
+                          zIndex: 2,
+                          background: '#fff',
+                          boxShadow: 2,
+                          '&:hover': { background: accentPalette.light }
+                        }}
+                        onClick={() => handleRemoveElement(trackNumber, index)}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <span>
+                      <IconButton
+                        size="small"
+                        sx={{
+                          position: 'absolute',
+                          bottom: 4,
+                          left: 4,
+                          zIndex: 2,
+                          background: '#fff',
+                          boxShadow: 2,
+                          '&:hover': { background: accentPalette.blue, color: '#fff' }
+                        }}
+                        onClick={() => handleMoveElement(trackNumber, index, 'left')}
+                        disabled={index === 0}
+                      >
+                        <ArrowBackIosNewIcon sx={{ fontSize: 16 }}/>
+                      </IconButton>
+                    </span>
+                    <span>
+                      <IconButton
+                        size="small"
+                        sx={{
+                          position: 'absolute',
+                          bottom: 4,
+                          right: 4,
+                          zIndex: 2,
+                          background: '#fff',
+                          boxShadow: 2,
+                          '&:hover': { background: accentPalette.blue, color: '#fff' }
+                        }}
+                        onClick={() => handleMoveElement(trackNumber, index, 'right')}
+                        disabled={index === elements.length - 1}
+                      >
+                        <ArrowForwardIosIcon sx={{ fontSize: 16 }} />
+                      </IconButton>
+                    </span>
+                  </Box>
+                );
+              })
             )}
           </Box>
           <Typography variant="caption" color="textSecondary" sx={{ mt: 1 }}>
@@ -616,6 +648,7 @@ const GameView: React.FC = () => {
                         <MenuItem value="2">{t('wagon_type_2', language) || "Type 2"}</MenuItem>
                         <MenuItem value="3">{t('wagon_type_3', language) || "Type 3"}</MenuItem>
                         <MenuItem value="4">{t('wagon_type_4', language) || "Type 4"}</MenuItem>
+                        <MenuItem value="cabcar">{t('wagon_type_cabcar', language) || "Cab Car"}</MenuItem>
                       </Select>
                     </FormControl>
                   </Grid>

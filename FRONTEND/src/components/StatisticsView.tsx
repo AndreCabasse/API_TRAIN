@@ -17,7 +17,7 @@ import {
   Paper,
   CircularProgress
 } from '@mui/material';
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { useLanguage } from '../contexts/LanguageContext';
 import { t } from '../utils/translations';
 import { trainApi } from '../services/api';
@@ -206,37 +206,6 @@ const StatisticsView: React.FC = () => {
       }))
     : [];
 
-  // Train type distribution for pie chart
-  const typeData = trains.reduce((acc, train) => {
-    acc[train.type] = (acc[train.type] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-
-  const pieData = Object.entries(typeData).map(([name, value]) => ({
-    name: t(name, language),
-    value
-  }));
-
-  // Train length distribution for bar chart
-  const lengthData = trains.reduce((acc, train) => {
-    const range = train.longueur < 100 ? '<100m' :
-      train.longueur < 200 ? '100-200m' :
-      train.longueur < 300 ? '200-300m' : '>300m';
-    acc[range] = (acc[range] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-
-  const lengthChartData = Object.entries(lengthData).map(([range, count]) => ({
-    range,
-    count
-  }));
-
-  // Electric vs non-electric trains for pie chart
-  const electricData = [
-    { name: t('electric_train_short', language), value: trains.filter(t => t.electrique).length },
-    { name: t('non_electric_train_short', language) || 'Non électrique', value: trains.filter(t => !t.electrique).length }
-  ];
-
   // Requirements by day for line chart
   const requirementsChartData = requirementsByDay.map(row => ({
     date: row.date,
@@ -348,108 +317,6 @@ const StatisticsView: React.FC = () => {
                     <Typography color="textSecondary">{t('occupancy_rate', language) || "Taux d'occupation"}</Typography>
                   </Box>
                 </Stack>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Train type distribution pie chart */}
-          <Grid item xs={12} md={6}>
-            <Card sx={{ borderRadius: 3, boxShadow: 2, background: redPalette.faded3 }}>
-              <CardContent>
-                <Typography variant="h6" gutterBottom sx={{ color: redPalette.main }}>
-                  {t('train_type_distribution', language) || "Répartition par type de train"}
-                </Typography>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={pieData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={80}
-                      fill={redPalette.main}
-                      dataKey="value"
-                    >
-                      {pieData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <RechartsTooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Electric vs non-electric trains pie chart */}
-          <Grid item xs={12} md={6}>
-            <Card sx={{ borderRadius: 3, boxShadow: 2, background: redPalette.faded2 }}>
-              <CardContent>
-                <Typography variant="h6" gutterBottom sx={{ color: redPalette.accent }}>
-                  {t('electric_trains', language) || "Trains électriques"}
-                </Typography>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={electricData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={80}
-                      fill={redPalette.accent}
-                      dataKey="value"
-                    >
-                      {electricData.map((entry, index) => (
-                        <Cell key={`cell-electric-${index}`} fill={index === 0 ? redPalette.light : redPalette.faded} />
-                      ))}
-                    </Pie>
-                    <RechartsTooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Depot distribution bar chart */}
-          <Grid item xs={12} md={6}>
-            <Card sx={{ borderRadius: 3, boxShadow: 2, background: redPalette.veryLight }}>
-              <CardContent>
-                <Typography variant="h6" gutterBottom sx={{ color: redPalette.main }}>
-                  {t('depot_distribution', language) || "Répartition par dépôt"}
-                </Typography>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={depotData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <RechartsTooltip />
-                    <Legend />
-                    <Bar dataKey="trains" fill={redPalette.main} name={t('number_of_trains', language) || "Nombre de trains"} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Train length distribution bar chart */}
-          <Grid item xs={12} md={6}>
-            <Card sx={{ borderRadius: 3, boxShadow: 2, background: redPalette.faded3 }}>
-              <CardContent>
-                <Typography variant="h6" gutterBottom sx={{ color: redPalette.main }}>
-                  {t('length_distribution', language) || "Répartition par longueur"}
-                </Typography>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={lengthChartData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="range" />
-                    <YAxis />
-                    <RechartsTooltip />
-                    <Legend />
-                    <Bar dataKey="count" fill={redPalette.light} name={t('number_of_trains', language) || "Nombre de trains"} />
-                  </BarChart>
-                </ResponsiveContainer>
               </CardContent>
             </Card>
           </Grid>
