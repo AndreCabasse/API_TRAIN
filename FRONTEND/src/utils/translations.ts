@@ -300,6 +300,9 @@ export const TRANSLATIONS = {
         "save_current_simulation": {"fr": "Sauvegarder la simulation actuelle","en": "Save current simulation","da": "Gem den aktuelle simulering"},
         "save_name": {"fr": "Nom de la sauvegarde","en": "Save name","da": "Gem navn"},
         "save": {"fr": "Sauvegarder","en": "Save","da": "Gem"},
+        "week": {"fr": "Semaine","en": "Week","da": "Uge"},
+
+        "timelapse_trains_title": {"fr": "Timelapse des trains","en": "Timelapse trains","da": "Timelapse tog"},
         "wagon_type_cabcar": {"fr": "Cabcar","en": "Cabcar ","da": "Cabcar"},
         "my_saves": {"fr": "Mes sauvegardes","en": "My saves","da": "Mine gemte simuleringer"},
         "no_saves": {"fr": "Aucune sauvegarde disponible","en": "No saves available","da": "Ingen gemte simuleringer"},

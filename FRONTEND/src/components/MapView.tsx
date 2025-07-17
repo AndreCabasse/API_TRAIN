@@ -27,6 +27,7 @@ import {
   ListItemText
 } from '@mui/material';
 import { red, blue } from '@mui/material/colors';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import TimelapseMap from "./TimelapseMap";
 import { useLanguage } from '../contexts/LanguageContext';
 import { t } from '../utils/translations';
@@ -210,7 +211,7 @@ const MapView: React.FC = () => {
         >
           {t('depot_map', language) || "Depot map"}
         </Typography>
-
+        
         <Box mb={2}>
           <Card sx={{ p: 1.5, borderRadius: 2, background: red[50], display: 'inline-block', boxShadow: 1 }}>
             <Stack direction="row" spacing={3} alignItems="center">
@@ -230,28 +231,30 @@ const MapView: React.FC = () => {
                 <Chip size="small" label={t('waiting', language) || "Waiting"} sx={{ background: red[100], color: red[700] }} />
                 <Typography variant="body2">{t('waiting', language) || "Waiting"}</Typography>
               </Box>
-              <Box display="flex" alignItems="center" gap={1}>
-                <Chip size="small" label={t('placed', language) || "Placed"} sx={{ background: red[200], color: red[900] }} />
-                <Typography variant="body2">{t('placed', language) || "Placed"}</Typography>
-              </Box>
-              <Box display="flex" alignItems="center" gap={1}>
-                <Tooltip title="Timelapse">
-                  <IconButton
-                    sx={{
-                      background: showTimelapse ? red[200] : red[50],
-                      color: red[700],
-                      '&:hover': { background: red[100] }
-                    }}
-                    onClick={() => setShowTimelapse((v) => !v)}
-                  >
-                    <MapIcon />
-                  </IconButton>
-                </Tooltip>
-                <Typography variant="body2">Timelapse</Typography>
-              </Box>
-            </Stack>
-          </Card>
-        </Box>
+                <Box display="flex" alignItems="center" gap={1}>
+                  <Chip size="small" label={t('placed', language) || "Placed"} sx={{ background: red[200], color: red[900] }} />
+                  <Typography variant="body2">{t('placed', language) || "Placed"}</Typography>
+                </Box>
+              </Stack>
+            </Card>
+            <Tooltip title={t('timelapse', language) || "Timelapse"}>
+              <IconButton
+                sx={{
+                  background: showTimelapse ? red[200] : red[50],
+                  color: red[700],
+                  '&:hover': { background: red[100] },
+                  fontSize: 28,
+                  ml: 2,
+                  height: 48, // pour bien centrer verticalement
+                  width: 48
+                }}
+                onClick={() => setShowTimelapse((v) => !v)}
+              >
+                <AccessTimeIcon fontSize="inherit" />
+              </IconButton>
+            </Tooltip>
+          </Box>
+
 
         {/* Affichage conditionnel : timelapse ou carte classique */}
         {showTimelapse ? (

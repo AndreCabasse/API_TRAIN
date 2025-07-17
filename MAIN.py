@@ -527,8 +527,8 @@ def get_gantt(depot_name: str):
     
     return get_gantt_data(simulation, depot_name)
 
-@app.get("/timelapse-data")
-def get_timelapse_data():
+@app.get("/timelapse-data2")
+def get_timelapse_data2():
     print(">>> /timelapse-data CALLED <<<")
     """
     Retourne pour chaque train la liste de ses positions (dépôts) au fil du temps.

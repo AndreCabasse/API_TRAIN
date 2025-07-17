@@ -1,20 +1,82 @@
 import React, { useEffect, useState, useRef } from "react";
-import { MapContainer, TileLayer, Marker, Polyline, Tooltip } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Polyline, Tooltip, Circle } from "react-leaflet";
 import { trainApi } from "../services/api";
-import { Box, Slider, Typography, Card, CardContent } from "@mui/material";
+import { Box, Slider, Typography, Card, CardContent, Paper, IconButton, Divider } from "@mui/material";
+import PlayArrowIcon from "@mui/icons-material/PlayArrow";
+import PauseIcon from "@mui/icons-material/Pause";
 import "leaflet/dist/leaflet.css";
+import L from "leaflet";
+import { useLanguage } from "../contexts/LanguageContext";
+import { t } from "../utils/translations";
+
+// Pour calculer la semaine de l'année
+function getWeekNumber(date: Date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  // @ts-ignore
+  const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  return weekNo;
+}
+
+// Décalage automatique si plusieurs trains au même endroit
+function getOffsetForTrain(trainsAtCurrent: any[], train: any) {
+  const samePos = trainsAtCurrent.filter(
+    t => t.pos.lat === train.pos.lat && t.pos.lon === train.pos.lon
+  );
+  const localIdx = samePos.findIndex(t => t.train_id === train.train_id);
+  return -18 - localIdx * 22;
+}
+
+// Fonction utilitaire pour créer un DivIcon avec le nom du train et un offset vertical
+const getTrainNameIcon = (name: string, offsetY = -18) =>
+  new L.DivIcon({
+    html: `<div style="
+      position: relative;
+      display: inline-block;
+      transform: translateY(${offsetY}px);
+    ">
+      <div style="
+        background: #fff;
+        border: 2px solid #d32f2f;
+        border-radius: 8px;
+        padding: 2px 8px;
+        font-weight: 500;
+        color: #d32f2f;
+        font-size: 13px;
+        min-width: 30px;
+        box-shadow: 0 2px 6px #0002;
+        text-align: center;
+        ">
+        ${name}
+      </div>
+      <div style="
+        position: absolute;
+        left: 50%;
+        top: 100%;
+        transform: translateX(-50%);
+        width: 0; height: 0;
+        border-left: 7px solid transparent;
+        border-right: 7px solid transparent;
+        border-top: 10px solid #d32f2f;
+      "></div>
+    </div>`,
+    className: "",
+    iconAnchor: [25, 38],
+  });
 
 const TimelapseMap: React.FC = () => {
   const [timelapseData, setTimelapseData] = useState<any[]>([]);
   const [timePoints, setTimePoints] = useState<string[]>([]);
   const [currentTimeIdx, setCurrentTimeIdx] = useState(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const { language } = useLanguage();
 
   // Charger les données du backend
   useEffect(() => {
     trainApi.getTimelapseData().then((data) => {
       setTimelapseData(data);
-      // Extraire tous les instants uniques
       const allTimes = data.flatMap(train =>
         train.positions.flatMap((p: any) => [p.debut, p.fin])
       );
@@ -40,17 +102,14 @@ const TimelapseMap: React.FC = () => {
     intervalRef.current = null;
   };
 
-  // Nettoyage à la destruction
   useEffect(() => () => pause(), []);
 
-  // Afficher les trains présents à l’instant courant
   const currentTime = timePoints[currentTimeIdx];
   const trainsAtCurrent = timelapseData.map(train => {
     const pos = train.positions.find((p: any) => p.debut <= currentTime && currentTime <= p.fin);
     return pos ? { ...train, pos } : null;
   }).filter(Boolean);
 
-  // Centre de la carte
   const allDepots = timelapseData.flatMap(t => t.positions.map((p: any) => [p.lat, p.lon]));
   const center = allDepots.length
     ? [
@@ -59,41 +118,147 @@ const TimelapseMap: React.FC = () => {
       ]
     : [55.6, 12.4];
 
+  // Calcul de la semaine de l'année
+  let weekStr = "";
+  if (currentTime) {
+    const dateObj = new Date(currentTime);
+    const week = getWeekNumber(dateObj);
+    weekStr = `${t("week", language)} ${week}`;
+  }
+
   return (
-    <Card sx={{ mt: 3, mb: 3 }}>
+    <Card
+      sx={{
+        mt: 4,
+        mb: 4,
+        borderRadius: 4,
+        boxShadow: 6,
+        background: "linear-gradient(135deg, #f8fafc 0%, #e3e7ed 100%)",
+      }}
+    >
       <CardContent>
-        <Typography variant="h6" gutterBottom>
-          Timelapse des trains sur la carte
+        <Typography variant="h5" fontWeight={700} gutterBottom color="primary">
+          {t("timelapse_trains_title", language)}
         </Typography>
-        <Box sx={{ mb: 2, display: "flex", alignItems: "center", gap: 2 }}>
-          <button onClick={play}>▶️</button>
-          <button onClick={pause}>⏸️</button>
+        <Paper
+          elevation={2}
+          sx={{
+            mb: 3,
+            p: 2,
+            display: "flex",
+            alignItems: "center",
+            gap: 2,
+            background: "#fff8",
+            borderRadius: 2,
+          }}
+        >
+          <IconButton color="primary" onClick={play} size="large">
+            <PlayArrowIcon />
+          </IconButton>
+          <IconButton color="primary" onClick={pause} size="large">
+            <PauseIcon />
+          </IconButton>
           <Slider
             min={0}
             max={timePoints.length - 1}
             value={currentTimeIdx}
             onChange={(_, v) => setCurrentTimeIdx(v as number)}
-            sx={{ width: 300 }}
+            sx={{
+              width: 300,
+              mx: 2,
+              color: "#d32f2f",
+              "& .MuiSlider-thumb": { boxShadow: 2 },
+            }}
           />
-          <Typography variant="body2">{currentTime && new Date(currentTime).toLocaleString()}</Typography>
+        </Paper>
+        <Divider sx={{ mb: 2 }} />
+        <Box
+          sx={{
+            borderRadius: 3,
+            overflow: "hidden",
+            boxShadow: 3,
+            border: "2px solid #e0e0e0",
+            position: "relative",
+            minHeight: 540,
+          }}
+        >
+          {/* Date affichée en gros sur la carte */}
+          <Box
+            sx={{
+              position: "absolute",
+              top: 32,
+              left: "50%",
+              transform: "translateX(-50%)",
+              zIndex: 1000,
+              background: "rgba(255,255,255,0.92)",
+              borderRadius: 3,
+              px: 4,
+              py: 1,
+              boxShadow: 3,
+              border: "2px solid #d32f2f",
+              fontWeight: 700,
+              fontSize: 28,
+              color: "#d32f2f",
+              letterSpacing: 1,
+              textAlign: "center",
+              minWidth: 320,
+              maxWidth: "90vw",
+              overflow: "hidden",
+              whiteSpace: "nowrap",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 0.5,
+            }}
+          >
+            <span>{currentTime ? new Date(currentTime).toLocaleString(language) : ""}</span>
+            <span style={{ fontSize: 18, color: "#555", fontWeight: 500 }}>{weekStr}</span>
+          </Box>
+          <MapContainer center={center as [number, number]} zoom={6} style={{ height: 500, width: "100%" }}>
+            <TileLayer url="https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png" />
+            {/* Trajet complet en gris pointillé */}
+            {timelapseData.map((train, idx) => (
+              <Polyline
+                key={train.train_id + "_future"}
+                positions={train.positions.map((p: any) => [p.lat, p.lon])}
+                color="#bbb"
+                opacity={0.3}
+                dashArray="5,10"
+              />
+            ))}
+            {/* Trajet parcouru en rouge */}
+            {timelapseData.map((train, idx) => {
+              const pastPositions = train.positions.filter((p: any) => p.debut <= currentTime);
+              if (pastPositions.length < 2) return null;
+              return (
+                <Polyline
+                  key={train.train_id + "_past"}
+                  positions={pastPositions.map((p: any) => [p.lat, p.lon])}
+                  color="#d32f2f"
+                  weight={4}
+                  opacity={0.8}
+                />
+              );
+            })}
+            {/* Marqueurs trains avec nom et décalage si plusieurs */}
+            {trainsAtCurrent.map((train: any, idx: number) => (
+              <Marker
+                key={train.train_id}
+                position={[train.pos.lat, train.pos.lon]}
+                icon={getTrainNameIcon(train.train_nom, getOffsetForTrain(trainsAtCurrent, train))}
+              >
+                <Tooltip direction="top" offset={[0, -20]}>
+                  <b>{train.train_nom}</b> ({t("depot", language)}: {train.pos.depot})
+                </Tooltip>
+                <Circle
+                  center={[train.pos.lat, train.pos.lon]}
+                  radius={2500}
+                  pathOptions={{ color: "#d32f2f", fillOpacity: 0.2, weight: 2 }}
+                />
+              </Marker>
+            ))}
+          </MapContainer>
         </Box>
-        <MapContainer center={center as [number, number]} zoom={6} style={{ height: 500, width: "100%" }}>
-          <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
-          {trainsAtCurrent.map((train: any, idx: number) => (
-            <Marker key={train.train_id} position={[train.pos.lat, train.pos.lon]}>
-              <Tooltip>{train.train_nom} ({train.pos.depot})</Tooltip>
-            </Marker>
-          ))}
-          {/* Optionnel : tracer les trajets */}
-          {timelapseData.map((train, idx) => (
-            <Polyline
-              key={train.train_id}
-              positions={train.positions.map((p: any) => [p.lat, p.lon])}
-              color="#d32f2f"
-              opacity={0.3}
-            />
-          ))}
-        </MapContainer>
       </CardContent>
     </Card>
   );
