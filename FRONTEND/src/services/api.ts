@@ -246,6 +246,11 @@ export const trainApi = {
     return response.data;
   },
 
+  getTimelapseData: async (): Promise<any[]> => {
+    const response = await api.get('/timelapse-data');
+    return response.data;
+  },
+
   /**
    * Reset the mini-game to its initial state.
    * @returns New game state.

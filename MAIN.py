@@ -9,7 +9,7 @@ statistics, visualizations, and a mini-game for train composition.
 Created on Wed Jun 25 09:51:02 2025
 @author: andre
 """
-
+print(">>> MAIN.PY CHARGÉ <<<")
 # Core FastAPI imports for buil    # Add waiting period if the train was placed in a waiting queueing the REST API
 from fastapi import FastAPI, HTTPException, UploadFile, Body, File, Request
 from fastapi.responses import Response, JSONResponse
@@ -527,6 +527,35 @@ def get_gantt(depot_name: str):
     
     return get_gantt_data(simulation, depot_name)
 
+@app.get("/timelapse-data")
+def get_timelapse_data():
+    print(">>> /timelapse-data CALLED <<<")
+    """
+    Retourne pour chaque train la liste de ses positions (dépôts) au fil du temps.
+    Format : [{train_id, train_nom, positions: [{depot, lat, lon, debut, fin}, ...]}, ...]
+    """
+    result = []
+    for train in simulation.trains:
+        traj = []
+        for depot_name, depot in simulation.depots.items():
+            for voie_idx, debut, fin, t in depot["occupation"]:
+                if getattr(t, "id", None) == train.id:
+                    traj.append({
+                        "depot": depot_name,
+                        "lat": depot.get("lat"),
+                        "lon": depot.get("lon"),
+                        "debut": debut.isoformat(),
+                        "fin": fin.isoformat(),
+                    })
+        if traj:
+            traj = sorted(traj, key=lambda x: x["debut"])
+            result.append({
+                "train_id": train.id,
+                "train_nom": train.nom,
+                "positions": traj
+            })
+    return result
+
 @app.get("/occupation/{depot_name}")
 def get_occupation_instant(depot_name: str, instant: str):
     """
@@ -651,6 +680,7 @@ def move_wagon_in_game(action: MoveAction):
     if not success:
         return error_response(f"Déplacement impossible: {error_code}", 400)
     return {"success": True, "state": game_state}
+
 
 @app.post("/game/swap-wagon")
 def swap_wagon(trackNumber: int = Body(...), elementIndex: int = Body(...), direction: str = Body(...)):
@@ -815,14 +845,13 @@ def reset_simulation():
     simulation.reset()
     return {"ok": True}
 
-@app.post("/game/move-wagon")
-def move_wagon_in_game_duplicate(action: MoveAction):
-    """
+"""@app.post("/game/move-wagon")
+//def move_wagon_in_game_duplicate(action: MoveAction):
+    
     Move a wagon between tracks in the mini-game (duplicate endpoint).
     
-    NOTE: This appears to be a duplicate of the move-wagon endpoint above.
+    This appears to be a duplicate of the move-wagon endpoint above.
     Consider removing this duplicate to avoid confusion and potential conflicts.
-    """
     success, error = deplacer_wagon(game_state, action.voie_source, action.wagon_idx, action.voie_cible)
     if not success:
         if error == "only_move_end":
@@ -830,7 +859,7 @@ def move_wagon_in_game_duplicate(action: MoveAction):
         else:
             raise HTTPException(status_code=400, detail=error or "Error during wagon movement.")
     return {"success": True, "state": game_state}
-
+"""
 @app.post("/recalculate")
 def recalculate_simulation():
     """
