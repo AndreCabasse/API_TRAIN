@@ -45,7 +45,7 @@ const redPalette = {
 };
 
 // Colors for pie/bar charts
-const COLORS = [redPalette.main, redPalette.light, '#FFBB28', '#FF8042', '#8884D8'];
+//const COLORS = [redPalette.main, redPalette.light, '#FFBB28', '#FF8042', '#8884D8'];
 
 /**
  * Table component to display requirements by day.
