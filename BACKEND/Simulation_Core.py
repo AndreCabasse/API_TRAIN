@@ -119,39 +119,45 @@ class Simulation:
         self.recalculer()
         return None
     
-        def optimiser_placement_global(self):
-            """
-            Place chaque train sur le premier dépôt disponible (en respectant les contraintes).
-            Modifie le champ .depot du train si nécessaire.
-            """
-            # Réinitialise toutes les occupations
-            for depot in self.depots.values():
-                depot["occupation"].clear()
-            # Trie les trains par arrivée
-            self.trains.sort(key=lambda t: t.arrivee)
-            for train in self.trains:
-                train_placé = False
-                for depot_name, depot_data in self.depots.items():
-                    occupation = depot_data["occupation"]
-                    numeros_voies = depot_data["numeros_voies"]
-                    longueurs_voies = depot_data["longueurs_voies"]
-                    voie_idx, debut_placement = self.chercher_voie_disponible(
-                        train, train.arrivee, occupation, longueurs_voies
-                    )
-                    if voie_idx is not None and debut_placement < train.depart:
-                        train.depot = depot_name
-                        train.voie = numeros_voies[voie_idx]
-                        train.en_attente = False
-                        train.debut_attente = train.arrivee
-                        train.fin_attente = debut_placement
-                        occupation.append((voie_idx, debut_placement, train.depart, train))
-                        train_placé = True
-                        break
-                if not train_placé:
-                    train.voie = None
-                    train.en_attente = True
+
+    def optimiser_placement_global(self):
+        """
+        Place chaque train sur le premier dépôt disponible (en respectant les contraintes).
+        Modifie le champ .depot du train si nécessaire.
+        """
+        # Réinitialise toutes les occupations
+        for depot in self.depots.values():
+            depot["occupation"].clear()
+        # Trie les trains par arrivée
+        self.trains.sort(key=lambda t: t.arrivee)
+        for train in self.trains:
+            # Retire toute occupation précédente liée à ce train
+            for depot_data in self.depots.values():
+                depot_data["occupation"] = [
+                    occ for occ in depot_data["occupation"] if occ[3] != train
+                ]
+            train_placé = False
+            for depot_name, depot_data in self.depots.items():
+                occupation = depot_data["occupation"]
+                numeros_voies = depot_data["numeros_voies"]
+                longueurs_voies = depot_data["longueurs_voies"]
+                voie_idx, debut_placement = self.chercher_voie_disponible(
+                    train, train.arrivee, occupation, longueurs_voies
+                )
+                if voie_idx is not None and debut_placement < train.depart:
+                    train.depot = depot_name
+                    train.voie = numeros_voies[voie_idx]
+                    train.en_attente = False
                     train.debut_attente = train.arrivee
-                    train.fin_attente = None
+                    train.fin_attente = debut_placement
+                    occupation.append((voie_idx, debut_placement, train.depart, train))
+                    train_placé = True
+                    break
+            if not train_placé:
+                train.voie = None
+                train.en_attente = True
+                train.debut_attente = train.arrivee
+                train.fin_attente = None
 
     def chercher_voie_disponible(self, train, ref, occupation, longueurs_voies):
         """
