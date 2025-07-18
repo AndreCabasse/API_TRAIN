@@ -160,85 +160,20 @@ class Simulation:
         self.trains.clear()
 
     def recalculer(self):
+        """
+        Recalculate all train placements in the simulation.
+        Places trains one by one in chronological order.
+        Updates train status (waiting, track assignment, etc.).
+        """
         # Reset all depot occupations
         for depot in self.depots.values():
             depot["occupation"].clear()
-        for train in self.trains:
-            train.voie = None
-            train.en_attente = False
-            train.debut_attente = train.arrivee
-            train.fin_attente = None
 
         # Sort all trains by arrival time (chronological)
         self.trains.sort(key=lambda t: t.arrivee)
-
-        # 1. Détecter tous les chevauchements pour chaque train du même nom
-        nom_to_periods = {}
+        
         for train in self.trains:
-            nom_to_periods.setdefault(train.nom, []).append(train)
-
-        # 2. Marquer tous les trains du même nom qui se chevauchent comme "en attente"
-        for trains_same_nom in nom_to_periods.values():
-            trains_same_nom.sort(key=lambda t: t.arrivee)
-            n = len(trains_same_nom)
-            # On crée une liste pour marquer les trains à mettre en attente
-            en_attente = [False] * n
-
-            # On construit les groupes de chevauchement
-            groupes = []
-            for i in range(n):
-                t1 = trains_same_nom[i]
-                groupe = [i]
-                for j in range(n):
-                    if i == j:
-                        continue
-                    t2 = trains_same_nom[j]
-                    if not (t1.depart <= t2.arrivee or t1.arrivee >= t2.depart):
-                        groupe.append(j)
-                groupes.append(set(groupe))
-
-            # On fusionne les groupes qui ont des intersections
-            from functools import reduce
-            def fusion_groupes(groupes):
-                fusionnes = []
-                while groupes:
-                    first, *rest = groupes
-                    first = set(first)
-                    changed = True
-                    while changed:
-                        changed = False
-                        new_rest = []
-                        for g in rest:
-                            if first & g:
-                                first |= g
-                                changed = True
-                            else:
-                                new_rest.append(g)
-                        rest = new_rest
-                    fusionnes.append(first)
-                    groupes = rest
-                return fusionnes
-
-            groupes_fusionnes = fusion_groupes(groupes)
-            # Si un groupe contient plus d'un séjour, tous sont en attente
-            for groupe in groupes_fusionnes:
-                if len(groupe) > 1:
-                    for idx in groupe:
-                        en_attente[idx] = True
-
-            # On applique le statut en_attente à tous les trains concernés
-            for i in range(n):
-                if en_attente[i]:
-                    t = trains_same_nom[i]
-                    t.voie = None
-                    t.en_attente = True
-                    t.debut_attente = t.arrivee
-                    t.fin_attente = None
-
-        # 3. Placer les trains qui ne sont pas en attente
-        for train in self.trains:
-            if train.en_attente:
-                continue
+        # Place trains one by one, in order of arrival
             depot = train.depot
             depot_data = self.depots[depot]
             occupation = depot_data["occupation"]
@@ -265,6 +200,10 @@ class Simulation:
                 train.en_attente = True
                 train.debut_attente = train.arrivee
                 train.fin_attente = None
+
+
+
+
 
     def undo(self):
         """
