@@ -511,6 +511,14 @@ def get_gantt(depot_name: str):
     
     return get_gantt_data(simulation, depot_name)
 
+@app.post("/optimize-placement")
+def optimize_placement():
+    """
+    Optimise le placement de tous les trains sur tous les dépôts.
+    """
+    simulation.optimiser_placement_global()
+    return {"success": True, "trains": [vars(train) for train in simulation.trains]}
+
 @app.get("/timelapse-data2")
 def get_timelapse_data2():
     print(">>> /timelapse-data CALLED <<<")

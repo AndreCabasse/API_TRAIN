@@ -17,6 +17,7 @@ import {
   FormControl,
   InputLabel,
   Select,
+  Switch,
   MenuItem,
   FormControlLabel,
   Checkbox,
@@ -64,6 +65,7 @@ const redPalette = {
  * Handles simulation reset, Excel import, and displays feedback via Snackbar.
  * Uses MUI components for UI and supports internationalization.
  */
+
 const TrainManagement: React.FC = () => {
   const { language } = useLanguage();
   const [trains, setTrains] = useState<Train[]>([]);
@@ -86,6 +88,8 @@ const TrainManagement: React.FC = () => {
     locomotive_cote: 'left'
   });
 
+
+  
   // Filtrage et tri
   const [search, setSearch] = useState('');
   const [depotFilter, setDepotFilter] = useState('');
@@ -320,6 +324,7 @@ const TrainManagement: React.FC = () => {
   /**
    * Get the correct locale for date pickers based on the selected language.
    */
+  const [optimizedMode, setOptimizedMode] = useState(false);
   const getDateLocale = () => {
     switch (language) {
       case 'en': return enUS;
@@ -416,6 +421,7 @@ const TrainManagement: React.FC = () => {
                   onChange={handleImportExcel}
                 />
               </Button>
+
               {/* Add new train button */}
               <Button
                 variant="contained"
@@ -430,6 +436,37 @@ const TrainManagement: React.FC = () => {
               >
                 {t('add_train', language)}
               </Button>
+                              {/* ----------- AJOUT DU BOUTON OPTIMISATION ----------- */}
+                <FormControlLabel
+                    control={
+                      <Switch
+                        checked={optimizedMode}
+                        onChange={async (e) => {
+                          const checked = e.target.checked;
+                          setOptimizedMode(checked);
+                          setLoading(true);
+                          try {
+                            const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+                            if (checked) {
+                              await fetch(`${apiUrl}/optimize-placement`, { method: 'POST' });
+                              showSnackbar(t('placement_optimized', language) || 'Placement optimisé', 'success');
+                            } else {
+                              await fetch(`${apiUrl}/reset-placement`, { method: 'POST' }); // <-- à créer côté backend
+                              showSnackbar(t('placement_reset', language) || 'Placement manuel restauré', 'success');
+                            }
+                            await loadTrains();
+                          } catch (err) {
+                            showSnackbar(t('placement_optimize_error', language) || 'Erreur optimisation', 'error');
+                          } finally {
+                            setLoading(false);
+                          }
+                        }}
+                        color="error"
+                      />
+                    }
+                    label={t('auto_placement', language) || 'Optimisation automatique'}
+                    sx={{ mr: 2 }}
+                  />
             </Box>
           </Box>
           <Box
