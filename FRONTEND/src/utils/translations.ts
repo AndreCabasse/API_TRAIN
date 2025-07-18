@@ -301,7 +301,12 @@ export const TRANSLATIONS = {
         "save_name": {"fr": "Nom de la sauvegarde","en": "Save name","da": "Gem navn"},
         "save": {"fr": "Sauvegarder","en": "Save","da": "Gem"},
         "week": {"fr": "Semaine","en": "Week","da": "Uge"},
-
+        "search_train": {"fr": "Rechercher un train","en": "Search a train","da": "Søg efter et tog"},
+        "all_depots": {"fr": "Tous les dépôts","en": "All depots","da": "Alle depoter"},
+        "all_status": {"fr": "Tous les statuts","en": "All statuses","da": "Alle status"},
+        "sort_by": {"fr": "Trier par","en": "Sort by","da": "Sorter efter"},
+        "ascending": {"fr": "Ordre croissant","en": "Ascending","da": "Stigende"},
+        "descending": {"fr": "Ordre décroissant","en": "Descending","da": "Faldende"},
         "timelapse_trains_title": {"fr": "Timelapse des trains","en": "Timelapse trains","da": "Timelapse tog"},
         "wagon_type_cabcar": {"fr": "Cabcar","en": "Cabcar ","da": "Cabcar"},
         "my_saves": {"fr": "Mes sauvegardes","en": "My saves","da": "Mine gemte simuleringer"},

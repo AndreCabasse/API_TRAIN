@@ -51,37 +51,21 @@ export function getWeekLinesAndAnnotations(startDate: string, endDate: string) {
 
 /**
  * Main component for displaying the global Gantt chart view.
- * Allows switching between simulation and optimized Gantt modes.
- * Fetches and displays data for all trains.
+ * Only displays the simulation Gantt (no optimized mode).
  */
 const GanttView = () => {
   const { language } = useLanguage();
-  const [mode, setMode] = useState<'simulation' | 'optimise'>('simulation');
   const [simulationData, setSimulationData] = useState<any[]>([]);
-  const [optimisedData, setOptimisedData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Fetch simulation and optimized Gantt data on mount
+  // Fetch simulation Gantt data on mount
   useEffect(() => {
     setLoading(true);
     trainApi.getAllTrainsGantt().then((data) => {
       setSimulationData(data);
       setLoading(false);
     });
-    trainApi.getOptimizedTrains().then((data) => {
-      setOptimisedData(data);
-    });
   }, []);
-
-  /**
-   * Handle switching between simulation and optimized Gantt modes.
-   */
-  const handleModeChange = (newMode: 'simulation' | 'optimise') => {
-    setMode(newMode);
-  };
-
-  // Select the correct data set based on the current mode
-  const ganttData = mode === 'simulation' ? simulationData : optimisedData;
 
   return (
     <>
@@ -94,41 +78,6 @@ const GanttView = () => {
         >
           {t('global_gantt_title', language) || t('gantt_chart', language) || "Global Gantt chart for trains"}
         </Typography>
-        {/* Mode selection buttons */}
-        <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-          <button
-            onClick={() => handleModeChange('simulation')}
-            style={{
-              background: mode === 'simulation' ? '#D32F2F' : '#fff',
-              color: mode === 'simulation' ? '#fff' : '#D32F2F',
-              border: '1px solid #D32F2F',
-              borderRadius: 8,
-              padding: '8px 20px',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              fontSize: 16,
-              transition: 'all 0.2s',
-            }}
-          >
-            Gantt simulation
-          </button>
-          <button
-            onClick={() => handleModeChange('optimise')}
-            style={{
-              background: mode === 'optimise' ? '#D32F2F' : '#fff',
-              color: mode === 'optimise' ? '#fff' : '#D32F2F',
-              border: '1px solid #D32F2F',
-              borderRadius: 8,
-              padding: '8px 20px',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              fontSize: 16,
-              transition: 'all 0.2s',
-            }}
-          >
-            Gantt optimized
-          </button>
-        </Box>
         {/* Gantt chart display */}
         <Paper
           sx={{
@@ -153,7 +102,7 @@ const GanttView = () => {
                 legendOrientation="h"
                 language={language}
                 getWeekLinesAndAnnotations={getWeekLinesAndAnnotations}
-                data={ganttData}
+                data={simulationData}
               />
             )}
           </Box>

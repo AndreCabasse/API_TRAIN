@@ -50,79 +50,6 @@ class Simulation:
     Handles depots, trains, placement optimization, and recalculation logic.
     """
 
-    def optimiser_placement_global(self):
-        """
-        Optimize the placement of all trains across all depots and tracks,
-        regardless of their initially assigned depot, to minimize space and time usage.
-        Returns a list of trains with their optimal placement (depot, track, schedule).
-        """
-        # Deep copy trains to avoid modifying the current state
-        from copy import deepcopy
-        trains = deepcopy(self.trains)
-        # Sort trains by arrival time
-        trains.sort(key=lambda t: t.arrivee)
-
-        # Prepare occupation structure for each depot
-        depots_occupation = {}
-        for depot, data in self.depots.items():
-            depots_occupation[depot] = {
-                "occupation": [],
-                "numeros_voies": data["numeros_voies"],
-                "longueurs_voies": data["longueurs_voies"]
-            }
-
-        # For each train, find the best placement (across all depots)
-        placements = []
-        for train in trains:
-            best = None
-            best_depot = None
-            best_voie = None
-            best_debut = None
-            for depot, data in depots_occupation.items():
-                longueurs_voies = data["longueurs_voies"]
-                occupation = data["occupation"]
-                # Search for an available track in this depot
-                voie_idx, debut_placement = self.chercher_voie_disponible(
-                    train, train.arrivee, occupation, longueurs_voies
-                )
-                if voie_idx is not None and debut_placement < train.depart:
-                    # Optimization: earliest possible placement, then shortest track possible
-                    if best is None or debut_placement < best or (debut_placement == best and longueurs_voies[voie_idx] < longueurs_voies[best_voie]):
-                        best = debut_placement
-                        best_depot = depot
-                        best_voie = voie_idx
-                        best_debut = debut_placement
-            if best_depot is not None:
-                # Place the train in this depot/track
-                depots_occupation[best_depot]["occupation"].append((best_voie, best_debut, train.depart, train))
-                placements.append({
-                    "id": train.id,
-                    "nom": train.nom,
-                    "arrivee": train.arrivee,
-                    "depart": train.depart,
-                    "longueur": train.longueur,
-                    "depot": best_depot,
-                    "voie": depots_occupation[best_depot]["numeros_voies"][best_voie],
-                    "debut_placement": best_debut,
-                    "fin_placement": train.depart,
-                    "en_attente": best_debut > train.arrivee,
-                })
-            else:
-                # No placement possible
-                placements.append({
-                    "id": train.id,
-                    "nom": train.nom,
-                    "arrivee": train.arrivee,
-                    "depart": train.depart,
-                    "longueur": train.longueur,
-                    "depot": None,
-                    "voie": None,
-                    "debut_placement": None,
-                    "fin_placement": None,
-                    "en_attente": True,
-                })
-        return placements
-
     def __init__(self, depots_config=None):
         """
         Initialize the simulation with a set of depots and their tracks.
@@ -233,11 +160,6 @@ class Simulation:
         self.trains.clear()
 
     def recalculer(self):
-        """
-        Recalculate all train placements in the simulation.
-        Places trains one by one in chronological order.
-        Updates train status (waiting, track assignment, etc.).
-        """
         # Reset all depot occupations
         for depot in self.depots.values():
             depot["occupation"].clear()
@@ -250,8 +172,73 @@ class Simulation:
         # Sort all trains by arrival time (chronological)
         self.trains.sort(key=lambda t: t.arrivee)
 
-        # Place trains one by one, in order of arrival
+        # 1. Détecter tous les chevauchements pour chaque train du même nom
+        nom_to_periods = {}
         for train in self.trains:
+            nom_to_periods.setdefault(train.nom, []).append(train)
+
+        # 2. Marquer tous les trains du même nom qui se chevauchent comme "en attente"
+        for trains_same_nom in nom_to_periods.values():
+            trains_same_nom.sort(key=lambda t: t.arrivee)
+            n = len(trains_same_nom)
+            # On crée une liste pour marquer les trains à mettre en attente
+            en_attente = [False] * n
+
+            # On construit les groupes de chevauchement
+            groupes = []
+            for i in range(n):
+                t1 = trains_same_nom[i]
+                groupe = [i]
+                for j in range(n):
+                    if i == j:
+                        continue
+                    t2 = trains_same_nom[j]
+                    if not (t1.depart <= t2.arrivee or t1.arrivee >= t2.depart):
+                        groupe.append(j)
+                groupes.append(set(groupe))
+
+            # On fusionne les groupes qui ont des intersections
+            from functools import reduce
+            def fusion_groupes(groupes):
+                fusionnes = []
+                while groupes:
+                    first, *rest = groupes
+                    first = set(first)
+                    changed = True
+                    while changed:
+                        changed = False
+                        new_rest = []
+                        for g in rest:
+                            if first & g:
+                                first |= g
+                                changed = True
+                            else:
+                                new_rest.append(g)
+                        rest = new_rest
+                    fusionnes.append(first)
+                    groupes = rest
+                return fusionnes
+
+            groupes_fusionnes = fusion_groupes(groupes)
+            # Si un groupe contient plus d'un séjour, tous sont en attente
+            for groupe in groupes_fusionnes:
+                if len(groupe) > 1:
+                    for idx in groupe:
+                        en_attente[idx] = True
+
+            # On applique le statut en_attente à tous les trains concernés
+            for i in range(n):
+                if en_attente[i]:
+                    t = trains_same_nom[i]
+                    t.voie = None
+                    t.en_attente = True
+                    t.debut_attente = t.arrivee
+                    t.fin_attente = None
+
+        # 3. Placer les trains qui ne sont pas en attente
+        for train in self.trains:
+            if train.en_attente:
+                continue
             depot = train.depot
             depot_data = self.depots[depot]
             occupation = depot_data["occupation"]
@@ -261,6 +248,7 @@ class Simulation:
             voie_idx, debut_placement = self.chercher_voie_disponible(
                 train, train.arrivee, occupation, longueurs_voies
             )
+
             if voie_idx is not None and debut_placement < train.depart:
                 train.voie = numeros_voies[voie_idx]
                 if debut_placement > train.arrivee:

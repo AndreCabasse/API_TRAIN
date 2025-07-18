@@ -42,6 +42,10 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { t } from '../utils/translations';
 import { trainApi } from '../services/api';
 import { Train, TrainFormData } from '../types';
+import { ToggleButton, ToggleButtonGroup } from '@mui/material';
+import SortIcon from '@mui/icons-material/Sort';
+import SearchIcon from '@mui/icons-material/Search';
+import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import { userApi } from '../services/userApi';
 
 // Harmonized red palette for consistent theming
@@ -82,10 +86,40 @@ const TrainManagement: React.FC = () => {
     locomotive_cote: 'left'
   });
 
+  // Filtrage et tri
+  const [search, setSearch] = useState('');
+  const [depotFilter, setDepotFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [sortField, setSortField] = useState<'arrivee' | 'depart'>('arrivee');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+
   // On mount: load last simulation or fallback to current trains, and load depots
-useEffect(() => {
-  const fetchTrainsAndDepots = async () => {
-    if (localStorage.getItem("justLoadedSimulation") === "1") {
+  useEffect(() => {
+    const fetchTrainsAndDepots = async () => {
+      if (localStorage.getItem("justLoadedSimulation") === "1") {
+        const loaded = localStorage.getItem("loadedSimulation");
+        if (loaded) {
+          try {
+            const data = JSON.parse(loaded);
+            if (data.trains) setTrains(data.trains);
+            localStorage.removeItem("loadedSimulation");
+          } catch {}
+        }
+        localStorage.removeItem("justLoadedSimulation"); // Reset the flag
+        // Load depots only if we just loaded a simulation
+        await loadDepots();
+        return;
+      }
+      // otherwise, load trains and depots normally
+      await loadTrains();
+      await loadDepots();
+    };
+    fetchTrainsAndDepots();
+    // eslint-disable-next-line
+  }, []);
+
+  useEffect(() => {
+    const onSimulationLoaded = () => {
       const loaded = localStorage.getItem("loadedSimulation");
       if (loaded) {
         try {
@@ -94,33 +128,10 @@ useEffect(() => {
           localStorage.removeItem("loadedSimulation");
         } catch {}
       }
-      localStorage.removeItem("justLoadedSimulation"); // Reset the flag
-      // Load depots only if we just loaded a simulation
-      await loadDepots();
-      return;
-    }
-    // otherwise, load trains and depots normally
-    await loadTrains();
-    await loadDepots();
-  };
-  fetchTrainsAndDepots();
-  // eslint-disable-next-line
-}, []);
-
-  useEffect(() => {
-  const onSimulationLoaded = () => {
-    const loaded = localStorage.getItem("loadedSimulation");
-    if (loaded) {
-      try {
-        const data = JSON.parse(loaded);
-        if (data.trains) setTrains(data.trains);
-        localStorage.removeItem("loadedSimulation");
-      } catch {}
-    }
-  };
-  window.addEventListener("simulationLoaded", onSimulationLoaded);
-  return () => window.removeEventListener("simulationLoaded", onSimulationLoaded);
-}, []);
+    };
+    window.addEventListener("simulationLoaded", onSimulationLoaded);
+    return () => window.removeEventListener("simulationLoaded", onSimulationLoaded);
+  }, []);
 
   /**
    * Load all trains from the API.
@@ -333,6 +344,21 @@ useEffect(() => {
     );
   });
 
+  // Filtrage et tri des trains
+  const filteredTrains = trains
+    .filter(train =>
+      (!search || train.nom.toLowerCase().includes(search.toLowerCase())) &&
+      (!depotFilter || train.depot === depotFilter) &&
+      (!statusFilter ||
+        (statusFilter === 'waiting' && train.en_attente) ||
+        (statusFilter === 'placed' && !train.en_attente))
+    )
+    .sort((a, b) => {
+      const dateA = new Date(a[sortField]).getTime();
+      const dateB = new Date(b[sortField]).getTime();
+      return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+    });
+
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={getDateLocale()}>
       <>
@@ -406,6 +432,98 @@ useEffect(() => {
               </Button>
             </Box>
           </Box>
+          <Box
+            display="flex"
+            gap={2}
+            mb={2}
+            flexWrap="wrap"
+            sx={{
+              background: redPalette.light,
+              borderRadius: 3,
+              boxShadow: 2,
+              p: 2,
+              alignItems: "center"
+            }}
+          >
+            <TextField
+              label={t('search_train', language)}
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              sx={{
+                minWidth: 220,
+                bgcolor: "#fff",
+                borderRadius: 2,
+                boxShadow: 1,
+              }}
+              InputProps={{
+                startAdornment: <SearchIcon color="action" sx={{ mr: 1 }} />
+              }}
+              InputLabelProps={{
+                sx: { pl: 1, color: redPalette.dark, bgcolor: "#fff", borderRadius: 1 }
+              }}
+            />
+            <FormControl fullWidth sx={{ minWidth: 180, bgcolor: "#fff", borderRadius: 2, boxShadow: 1 }}>
+              <InputLabel sx={{ pl: 1, color: redPalette.dark, bgcolor: "#fff", borderRadius: 1 }}>
+                <FilterAltIcon sx={{ mr: 1 }} />{t('select_depot', language)}
+              </InputLabel>
+              <Select
+                fullWidth
+                value={depotFilter}
+                onChange={e => setDepotFilter(e.target.value)}
+                label={t('select_depot', language)}
+                sx={{ bgcolor: "#fff" }}
+                MenuProps={{ PaperProps: { sx: { maxWidth: 300 } } }}
+              >
+                <MenuItem value="">{t('all_depots', language)}</MenuItem>
+                {depots.map(d => (
+                  <MenuItem key={d.depot} value={d.depot}>{d.depot}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl fullWidth sx={{ minWidth: 180, bgcolor: "#fff", borderRadius: 2, boxShadow: 1 }}>
+              <InputLabel sx={{ pl: 1, color: redPalette.dark, bgcolor: "#fff", borderRadius: 1 }}>
+                <FilterAltIcon sx={{ mr: 1 }} />{t('status', language)}
+              </InputLabel>
+              <Select
+                fullWidth
+                value={statusFilter}
+                onChange={e => setStatusFilter(e.target.value)}
+                label={t('status', language)}
+                sx={{ bgcolor: "#fff" }}
+                MenuProps={{ PaperProps: { sx: { maxWidth: 300 } } }}
+              >
+                <MenuItem value="">{t('all_status', language)}</MenuItem>
+                <MenuItem value="waiting">{t('waiting', language)}</MenuItem>
+                <MenuItem value="placed">{t('placed', language)}</MenuItem>
+              </Select>
+            </FormControl>
+            <ToggleButtonGroup
+              value={sortField}
+              exclusive
+              onChange={(_, value) => value && setSortField(value)}
+              sx={{ bgcolor: "#fff", borderRadius: 2, boxShadow: 1 }}
+            >
+              <ToggleButton value="arrivee" sx={{ px: 2 }}>
+                <SortIcon sx={{ mr: 1 }} />{t('arrival_time', language)}
+              </ToggleButton>
+              <ToggleButton value="depart" sx={{ px: 2 }}>
+                <SortIcon sx={{ mr: 1 }} />{t('departure_time', language)}
+              </ToggleButton>
+            </ToggleButtonGroup>
+            <ToggleButtonGroup
+              value={sortOrder}
+              exclusive
+              onChange={(_, value) => value && setSortOrder(value)}
+              sx={{ bgcolor: "#fff", borderRadius: 2, boxShadow: 1 }}
+            >
+              <ToggleButton value="asc" sx={{ px: 2 }}>
+                {t('ascending', language)}
+              </ToggleButton>
+              <ToggleButton value="desc" sx={{ px: 2 }}>
+                {t('descending', language)}
+              </ToggleButton>
+            </ToggleButtonGroup>
+          </Box>
 
           {/* Loading indicator */}
           {loading && (
@@ -438,7 +556,7 @@ useEffect(() => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {trains.map((train) => (
+                {filteredTrains.map((train) => (
                   <TableRow key={train.id} hover sx={{
                     background: train.en_attente ? redPalette.card : "#fff",
                     transition: "background 0.2s"

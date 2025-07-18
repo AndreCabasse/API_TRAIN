@@ -24,17 +24,6 @@ export const trainApi = {
     return response.data;
   },
 
-  // ===== GLOBAL OPTIMIZATION =====
-
-  /**
-   * Fetch optimized train arrangements.
-   * @returns Array of optimized train data.
-   */
-  getOptimizedTrains: async (): Promise<any[]> => {
-    const response = await api.get('/trains/optimized');
-    return response.data;
-  },
-
   /**
    * Add a new train to the system.
    * @param trainData - Data for the new train.
@@ -247,7 +236,7 @@ export const trainApi = {
   },
 
   getTimelapseData: async (): Promise<any[]> => {
-    const response = await api.get('/timelapse-data');
+    const response = await api.get('/timelapse-data2');
     return response.data;
   },
 

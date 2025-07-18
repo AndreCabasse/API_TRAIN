@@ -158,22 +158,6 @@ def get_trains():
     """
     return [vars(train) for train in simulation.trains]
 
-# ===== GLOBAL OPTIMIZATION ENDPOINT =====
-
-@app.get("/trains/optimized")
-@app.get("/trains/optimized/")
-def get_optimized_trains():
-    """
-    Get the optimal train placement solution.
-    
-    Returns the globally optimized solution for train placement across all depots,
-    independent of the depot initially chosen when adding trains. This endpoint
-    uses advanced optimization algorithms to minimize conflicts and maximize efficiency.
-    """
-    # Call the global optimization method from simulation core
-    result = simulation.optimiser_placement_global()
-    return result
-
 @app.post("/trains")
 def add_train(train: TrainIn):
     """
@@ -585,19 +569,6 @@ def get_train_details_instant(depot_name: str, instant: str):
         raise HTTPException(status_code=400, detail="Invalid datetime format")
     
     return get_train_length_detail(simulation, instant_dt, depot_name)
-
-# ===== MINI-GAME ENDPOINTS =====
-# Note: This is a duplicate endpoint - should be removed or consolidated
-@app.get("/trains/optimized")
-@app.get("/trains/optimized/")
-def get_optimized_trains_duplicate():
-    """
-    Get optimal train placement (global optimization).
-    
-    NOTE: This appears to be a duplicate of the optimization endpoint above.
-    Consider consolidating these endpoints to avoid confusion.
-    """
-    return simulation.optimiser_placement_global()
 
 # ===== GAME DATA MODELS =====
 
