@@ -17,7 +17,6 @@ import {
   FormControl,
   InputLabel,
   Select,
-  Switch,
   MenuItem,
   FormControlLabel,
   Checkbox,
@@ -324,7 +323,7 @@ const TrainManagement: React.FC = () => {
   /**
    * Get the correct locale for date pickers based on the selected language.
    */
-  const [optimizedMode, setOptimizedMode] = useState(false);
+  //const [optimizedMode, setOptimizedMode] = useState(false);
   const getDateLocale = () => {
     switch (language) {
       case 'en': return enUS;
