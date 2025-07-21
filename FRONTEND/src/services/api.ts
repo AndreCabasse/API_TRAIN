@@ -234,6 +234,11 @@ export const trainApi = {
     const response = await api.post('/game/delete-element', { voie, element_idx });
     return response.data;
   },
+  
+  getAllTrainsGanttOptimized: async (): Promise<any[]> => {
+  const response = await api.get('/gantt-all-trains-optimized');
+  return response.data;
+},
 
   getTimelapseData: async (): Promise<any[]> => {
     const response = await api.get('/timelapse-data2');

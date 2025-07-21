@@ -198,6 +198,7 @@ export const TRANSLATIONS = {
         "electric_train_count": {"fr": "Trains électriques sur","en": "Electric trains out of","da": "Elektriske tog ud af"},
         "no_placed_trains": {"fr": "Aucun train placé","en": "No placed trains","da": "Ingen placerede tog"},
         "total": {"fr": "au total","en": "total","da": "i alt"},
+        "timelapse": {"fr": "Timelapse","en": "Timelapse","da": "Tidsforløb"},
         "cancel": { "fr": "Annuler", "en": "Cancel", "da": "Annuller" },
         "status": { "fr": "Statut", "en": "Status", "da": "Status" },
         "actions": { "fr": "Actions", "en": "Actions", "da": "Handlinger" },

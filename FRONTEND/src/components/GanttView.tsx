@@ -1,4 +1,4 @@
-import { Box, Container, Typography, Paper } from "@mui/material";
+import { Box, Container, Typography, Paper, Button } from "@mui/material";
 import AllTrainsGanttChart from "./AllTrainsGanttChart";
 import { useLanguage } from "../contexts/LanguageContext";
 import { t } from "../utils/translations";
@@ -56,7 +56,10 @@ export function getWeekLinesAndAnnotations(startDate: string, endDate: string) {
 const GanttView = () => {
   const { language } = useLanguage();
   const [simulationData, setSimulationData] = useState<any[]>([]);
+  const [optimizedData, setOptimizedData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [showOptimized, setShowOptimized] = useState(false);
+
 
   // Fetch simulation Gantt data on mount
   useEffect(() => {
@@ -67,48 +70,48 @@ const GanttView = () => {
     });
   }, []);
 
+    // Charger le gantt optimisé à la demande
+  const loadOptimized = async () => {
+    setLoading(true);
+    const data = await trainApi.getAllTrainsGanttOptimized();
+    setOptimizedData(data);
+    setLoading(false);
+  };
+
   return (
-    <>
-      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-        <Typography
-          variant="h4"
-          fontWeight="bold"
-          gutterBottom
-          sx={{ mb: 3, color: "#D32F2F", letterSpacing: 1 }}
-        >
-          {t('global_gantt_title', language) || t('gantt_chart', language) || "Global Gantt chart for trains"}
-        </Typography>
-        {/* Gantt chart display */}
-        <Paper
-          sx={{
-            p: { xs: 1, sm: 4 },
-            mb: 4,
-            borderRadius: 4,
-            boxShadow: 6,
-            background: "#fff",
-            minHeight: 850,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "stretch",
+    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+      <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ mb: 3, color: "#D32F2F", letterSpacing: 1 }}>
+        {t('global_gantt_title', language) || t('gantt_chart', language) || "Global Gantt chart for trains"}
+      </Typography>
+      <Box mb={2}>
+        <Button
+          variant={showOptimized ? "contained" : "outlined"}
+          color="error"
+          onClick={async () => {
+            if (!optimizedData.length) await loadOptimized();
+            setShowOptimized((v) => !v);
           }}
         >
-          <Box sx={{ flexGrow: 1 }}>
-            {loading ? (
-              <Typography variant="h6" color="text.secondary">Loading…</Typography>
-            ) : (
-              <AllTrainsGanttChart
-                height={800}
-                showLegend
-                legendOrientation="h"
-                language={language}
-                getWeekLinesAndAnnotations={getWeekLinesAndAnnotations}
-                data={simulationData}
-              />
-            )}
-          </Box>
-        </Paper>
-      </Container>
-    </>
+          {showOptimized ? t("show_simulation_gantt", language) : t("show_optimized_gantt", language) || "Afficher le Gantt optimisé"}
+        </Button>
+      </Box>
+      <Paper sx={{ p: { xs: 1, sm: 4 }, mb: 4, borderRadius: 4, boxShadow: 6, background: "#fff", minHeight: 850 }}>
+        <Box sx={{ flexGrow: 1 }}>
+          {loading ? (
+            <Typography variant="h6" color="text.secondary">Loading…</Typography>
+          ) : (
+            <AllTrainsGanttChart
+              height={800}
+              showLegend
+              legendOrientation="h"
+              language={language}
+              getWeekLinesAndAnnotations={getWeekLinesAndAnnotations}
+              data={showOptimized ? optimizedData : simulationData}
+            />
+          )}
+        </Box>
+      </Paper>
+    </Container>
   );
 };
 

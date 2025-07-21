@@ -511,6 +511,19 @@ def get_gantt(depot_name: str):
     
     return get_gantt_data(simulation, depot_name)
 
+@app.get("/gantt-all-trains-optimized")
+def gantt_all_trains_optimized():
+    """
+    Retourne le Gantt global après placement optimisé des trains.
+    Place les trains pour minimiser l'attente.
+    """
+    simulation.optimiser_placement_global()
+    # On retourne le Gantt global (tous dépôts)
+    all_gantt = []
+    for depot in simulation.depots:
+        all_gantt.extend(get_gantt_data(simulation, depot))
+    return all_gantt
+
 @app.post("/optimize-placement")
 def optimize_placement():
     """
