@@ -514,20 +514,25 @@ def get_gantt(depot_name: str):
 
 @app.get("/gantt-all-trains-optimized")
 def gantt_all_trains_optimized():
-    """
-    Retourne le Gantt global après placement optimisé des trains,
-    sans modifier la simulation courante.
-    Retourne aussi la liste des modifications (trains déplacés, etc).
-    """
-    sim_copy = copy.deepcopy(simulation)
-    modifications = sim_copy.optimiser_placement_global(return_changes=True)  # Adapte ta fonction pour retourner les changements
-    all_gantt = []
-    for depot in sim_copy.depots:
-        all_gantt.extend(get_gantt_data(sim_copy, depot))
-    return {
-        "gantt": all_gantt,
-        "modifications": modifications
-    }
+    # Supposons que simulation.optimiser_placement_global() modifie les .depot des trains
+    simulation.optimiser_placement_global()
+    # On génère la liste pour le frontend
+    result = []
+    for depot_name, depot_data in simulation.depots.items():
+        for voie_idx, debut, fin, train in depot_data["occupation"]:
+            result.append({
+                "train_id": getattr(train, "id", None),
+                "train_nom": getattr(train, "nom", None),
+                "depot": depot_name,  # <-- AJOUTER CE CHAMP
+                "voie": depot_data["numeros_voies"][voie_idx] if voie_idx < len(depot_data["numeros_voies"]) else voie_idx,
+                "debut": debut.isoformat() if hasattr(debut, "isoformat") else str(debut),
+                "fin": fin.isoformat() if hasattr(fin, "isoformat") else str(fin),
+                "type": getattr(train, "type", None),
+                "electrique": getattr(train, "electrique", False),
+            })
+    # Ajoute aussi les modifications si besoin
+    modifications = []  # à remplir selon ta logique
+    return {"gantt": result, "modifications": modifications}
 
 @app.post("/optimize-placement")
 def optimize_placement():
