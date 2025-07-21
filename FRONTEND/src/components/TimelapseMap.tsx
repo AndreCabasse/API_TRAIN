@@ -1,3 +1,11 @@
+// -*- coding: utf-8 -*-
+// Copyright (c) 2025 André CABASSE 
+// All rights reserved.
+//
+// This software is licensed under the MIT License.
+// See the LICENSE file for details.
+// Contact: andre.cabasse.massena@gmail.com
+
 import React, { useEffect, useState, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Polyline, Tooltip, Circle } from "react-leaflet";
 import { trainApi } from "../services/api";

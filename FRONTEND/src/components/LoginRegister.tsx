@@ -1,3 +1,11 @@
+// -*- coding: utf-8 -*-
+// Copyright (c) 2025 André CABASSE 
+// All rights reserved.
+//
+// This software is licensed under the MIT License.
+// See the LICENSE file for details.
+// Contact: andre.cabasse.massena@gmail.com
+
 import React, { useState } from "react";
 import { Box, Button, TextField, Typography, Tabs, Tab, Alert, Select, MenuItem, InputLabel, FormControl } from "@mui/material";
 import { userApi } from "../services/userApi";

@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+# Copyright (c) 2025 André CABASSE 
+# All rights reserved.
+#
+# This software is licensed under the MIT License.
+# See the LICENSE file for details.
+# Contact: andre.cabasse.massena@gmail.com
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel

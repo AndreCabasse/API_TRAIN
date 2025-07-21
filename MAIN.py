@@ -1,4 +1,10 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2025 André CABASSE 
+# All rights reserved.
+#
+# This software is licensed under the MIT License.
+# See the LICENSE file for details.
+# Contact: andre.cabasse.massena@gmail.com
 """
 Train Depot Simulation API - Main FastAPI Application
 
@@ -514,25 +520,30 @@ def get_gantt(depot_name: str):
 
 @app.get("/gantt-all-trains-optimized")
 def gantt_all_trains_optimized():
-    # Supposons que simulation.optimiser_placement_global() modifie les .depot des trains
-    simulation.optimiser_placement_global()
-    # On génère la liste pour le frontend
-    result = []
-    for depot_name, depot_data in simulation.depots.items():
-        for voie_idx, debut, fin, train in depot_data["occupation"]:
-            result.append({
-                "train_id": getattr(train, "id", None),
-                "train_nom": getattr(train, "nom", None),
-                "depot": depot_name,  # <-- AJOUTER CE CHAMP
-                "voie": depot_data["numeros_voies"][voie_idx] if voie_idx < len(depot_data["numeros_voies"]) else voie_idx,
-                "debut": debut.isoformat() if hasattr(debut, "isoformat") else str(debut),
-                "fin": fin.isoformat() if hasattr(fin, "isoformat") else str(fin),
-                "type": getattr(train, "type", None),
-                "electrique": getattr(train, "electrique", False),
+    """
+    Return the optimized Gantt chart for all trains, WITHOUT modifying the main simulation state.
+    """
+    # 1. Faire une copie profonde de la simulation
+    sim_copy = copy.deepcopy(simulation)
+    # 2. Appliquer l’optimisation sur la copie
+    sim_copy.optimiser_placement_global()
+    # 3. Générer le Gantt à partir de la copie optimisée
+    gantt = []
+    for depot in sim_copy.depots:
+        gantt += get_gantt_data(sim_copy, depot)
+    # 4. (Optionnel) Retourner aussi les modifications apportées (ex: trains déplacés)
+    # Ici, tu peux comparer sim_copy.trains et simulation.trains pour lister les changements
+    modifications = []
+    for t_opt in sim_copy.trains:
+        t_orig = next((t for t in simulation.trains if t.id == t_opt.id), None)
+        if t_orig and (t_opt.depot != t_orig.depot or t_opt.voie != t_orig.voie):
+            modifications.append({
+                "train": t_opt.nom,
+                "from": f"{t_orig.depot} voie {t_orig.voie}",
+                "to": f"{t_opt.depot} voie {t_opt.voie}",
+                "description": f"Déplacé de {t_orig.depot} voie {t_orig.voie} à {t_opt.depot} voie {t_opt.voie}"
             })
-    # Ajoute aussi les modifications si besoin
-    modifications = []  # à remplir selon ta logique
-    return {"gantt": result, "modifications": modifications}
+    return {"gantt": gantt, "modifications": modifications}
 
 @app.post("/optimize-placement")
 def optimize_placement():

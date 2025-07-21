@@ -1,3 +1,11 @@
+// -*- coding: utf-8 -*-
+// Copyright (c) 2025 André CABASSE 
+// All rights reserved.
+//
+// This software is licensed under the MIT License.
+// See the LICENSE file for details.
+// Contact: andre.cabasse.massena@gmail.com
+
 import React, { useState } from "react";
 import { ThemeProvider, CssBaseline } from "@mui/material";
 import { createTheme } from "@mui/material/styles";
@@ -45,6 +53,10 @@ function MainApp() {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <LoginRegister />
+        {/* Copyright visible même sur la page de login */}
+        <Box sx={{ width: "100%", textAlign: "center", py: 2, color: "#888", fontSize: 14 }}>
+          © 2025 André CABASSE. Tous droits réservés.
+        </Box>
       </ThemeProvider>
     );
   }
@@ -116,6 +128,21 @@ function MainApp() {
           {/* Main content rendered above the overlay */}
           <Box sx={{ position: "relative", zIndex: 1 }}>
             {renderContent()}
+          </Box>
+          {/* Copyright visible sur toutes les pages */}
+          <Box sx={{
+            width: "100%",
+            textAlign: "right",
+            py: 2,
+            color: "#888",
+            fontSize: 14,
+            position: "fixed", // <-- change 'absolute' en 'fixed'
+            bottom: 0,
+            left: 0,
+            zIndex: 1300, // plus élevé pour passer devant les autres éléments
+            background: "rgba(255,255,255,0.85)"
+          }}>
+            © 2025 André CABASSE. Tous droits réservés.
           </Box>
         </Box>
       </Box>
