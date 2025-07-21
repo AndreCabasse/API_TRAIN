@@ -28,6 +28,7 @@ from pydantic import BaseModel
 from datetime import datetime, timezone
 from typing import Optional
 import pandas as pd
+import copy
 from io import BytesIO
 from zoneinfo import ZoneInfo
 
