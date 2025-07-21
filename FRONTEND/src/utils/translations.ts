@@ -198,6 +198,8 @@ export const TRANSLATIONS = {
         "electric_train_count": {"fr": "Trains électriques sur","en": "Electric trains out of","da": "Elektriske tog ud af"},
         "no_placed_trains": {"fr": "Aucun train placé","en": "No placed trains","da": "Ingen placerede tog"},
         "total": {"fr": "au total","en": "total","da": "i alt"},
+        "show_optimized_gantt": { "fr": "Afficher le Gantt optimisé", "en": "Show optimized Gantt", "da": "Vis optimeret Gantt" },
+        "show_simulation_gantt": { "fr": "Afficher le Gantt simulation", "en": "Show simulation Gantt", "da": "Vis simuleret Gantt" },
         "timelapse": {"fr": "Timelapse","en": "Timelapse","da": "Tidsforløb"},
         "cancel": { "fr": "Annuler", "en": "Cancel", "da": "Annuller" },
         "status": { "fr": "Statut", "en": "Status", "da": "Status" },

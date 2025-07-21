@@ -54,12 +54,13 @@ function getColorForDepot(depot: string) {
 }
 
 interface AllTrainsGanttChartProps {
-  height?: number; // Height of the chart in pixels
-  showLegend?: boolean; // Whether to display the legend
-  legendOrientation?: "h" | "v"; // Legend orientation: horizontal or vertical
-  language: string; // Current language code
+  height?: number;
+  showLegend?: boolean;
+  legendOrientation?: "h" | "v";
+  language: string;
   getWeekLinesAndAnnotations?: (startDate: string, endDate: string) => { shapes: Partial<Shape>[]; annotations: any[] };
-  data?: GanttTrain[]; // Optional data override (otherwise fetched)
+  data?: GanttTrain[];
+  optimized?: boolean; // <-- Ajoute ceci
 }
 
 /**

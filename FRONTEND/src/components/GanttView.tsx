@@ -9,10 +9,6 @@ import { useEffect, useState } from "react";
 import { trainApi } from "../services/api";
 dayjs.extend(isoWeek);
 
-/**
- * Utility function to generate vertical week lines and week number annotations for the Gantt chart.
- * Adds a vertical line and annotation for each ISO week between startDate and endDate.
- */
 export function getWeekLinesAndAnnotations(startDate: string, endDate: string) {
   const shapes: Partial<Shape>[] = [];
   const annotations: any[] = [];
@@ -49,19 +45,15 @@ export function getWeekLinesAndAnnotations(startDate: string, endDate: string) {
   return { shapes, annotations };
 }
 
-/**
- * Main component for displaying the global Gantt chart view.
- * Only displays the simulation Gantt (no optimized mode).
- */
 const GanttView = () => {
   const { language } = useLanguage();
   const [simulationData, setSimulationData] = useState<any[]>([]);
   const [optimizedData, setOptimizedData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [showOptimized, setShowOptimized] = useState(false);
+  const [modifications, setModifications] = useState<any[]>([]);
 
-
-  // Fetch simulation Gantt data on mount
+  // Charger le Gantt simulation au montage
   useEffect(() => {
     setLoading(true);
     trainApi.getAllTrainsGantt().then((data) => {
@@ -70,11 +62,12 @@ const GanttView = () => {
     });
   }, []);
 
-    // Charger le gantt optimisé à la demande
+  // Charger le Gantt optimisé à la demande
   const loadOptimized = async () => {
     setLoading(true);
-    const data = await trainApi.getAllTrainsGanttOptimized();
-    setOptimizedData(data);
+    const res = await trainApi.getAllTrainsGanttOptimized();
+    setOptimizedData(res.gantt || []);
+    setModifications(res.modifications || []);
     setLoading(false);
   };
 
@@ -107,10 +100,31 @@ const GanttView = () => {
               language={language}
               getWeekLinesAndAnnotations={getWeekLinesAndAnnotations}
               data={showOptimized ? optimizedData : simulationData}
+              optimized={showOptimized}
             />
           )}
         </Box>
       </Paper>
+      {showOptimized && modifications.length > 0 && (
+        <Paper sx={{ mt: 2, p: 2, borderRadius: 2, background: "#FFF5F5" }}>
+          <Typography variant="h6" color="error" gutterBottom>
+            {t("optimized_changes", language) || "Modifications apportées par l'optimisation"}
+          </Typography>
+          <ul>
+            {modifications.map((mod: any, idx: number) => (
+              <li key={idx}>
+                {mod.train ? (
+                  <>
+                    <b>{mod.train}</b> : {mod.description || `déplacé de ${mod.from} à ${mod.to}`}
+                  </>
+                ) : (
+                  JSON.stringify(mod)
+                )}
+              </li>
+            ))}
+          </ul>
+        </Paper>
+      )}
     </Container>
   );
 };

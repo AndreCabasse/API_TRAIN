@@ -517,13 +517,17 @@ def gantt_all_trains_optimized():
     """
     Retourne le Gantt global après placement optimisé des trains,
     sans modifier la simulation courante.
+    Retourne aussi la liste des modifications (trains déplacés, etc).
     """
     sim_copy = copy.deepcopy(simulation)
-    sim_copy.optimiser_placement_global()
+    modifications = sim_copy.optimiser_placement_global(return_changes=True)  # Adapte ta fonction pour retourner les changements
     all_gantt = []
     for depot in sim_copy.depots:
         all_gantt.extend(get_gantt_data(sim_copy, depot))
-    return all_gantt
+    return {
+        "gantt": all_gantt,
+        "modifications": modifications
+    }
 
 @app.post("/optimize-placement")
 def optimize_placement():
