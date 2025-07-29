@@ -6,7 +6,8 @@ Created on Wed Jun 25 13:46:21 2025
 """
 
 # Va dans le dossier API
-cd c:\Users\andre\Desktop\ENTPE\STAGE_MSP\API
+cd c:\Users\andre\Desktop\ENTPE\STAGE_MSP\API_VF
+cd c:\Users\andre\Desktop\ENTPE\STAGE_MSP\SEATS_REDISTRIBUTION
 
 # Installe les dépendances Python (si pas déjà fait)
 pip install fastapi uvicorn pandas plotly python-multipart
@@ -15,7 +16,7 @@ pip install fastapi uvicorn pandas plotly python-multipart
 uvicorn MAIN:app --reload --host 0.0.0.0 --port 8000
 
 # Va dans le dossier FRONTEND
-cd c:\Users\andre\Desktop\ENTPE\STAGE_MSP\API\FRONTEND
+cd c:\Users\andre\Desktop\ENTPE\STAGE_MSP\API_VF\FRONTEND
 
 # Installe les dépendances Node.js
 npm install

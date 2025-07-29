@@ -63,18 +63,19 @@ class Simulation:
         """
         if depots_config is None:
             depots_config = {
-                "Glostrup": {"numeros_voies": [7,8,9,11], "longueurs_voies": [290,340,400,300], "lat": 55.662194, "lon": 12.393508},
-                "Naestved": {"numeros_voies": [1,2,3,4], "longueurs_voies": [250,300,350,280], "lat": 55.194538, "lon": 11.822616},
-                "Taulov": {"numeros_voies": [21], "longueurs_voies": [280], "lat": 55.546012, "lon": 9.632929},
-                "KAC": {"numeros_voies": [22], "longueurs_voies": [280], "lat": 55.624757, "lon": 12.680361},
-                "Helgoland": {"numeros_voies": [23], "longueurs_voies": [280], "lat": 55.714857, "lon": 12.582771},
-                "Padborg": {"numeros_voies": [24], "longueurs_voies": [280], "lat": 54.824899, "lon": 9.357716},
-                "Langenfelde": {"numeros_voies": [25], "longueurs_voies": [280], "lat": 53.581551, "lon": 9.924246},
-                "LMII": {"numeros_voies": [26,27], "longueurs_voies": [280,300], "lat": 40.537568, "lon": -3.887422},
-                "Hendaya": {"numeros_voies": [28], "longueurs_voies": [320], "lat": 43.348556, "lon": -1.788629},
-                "Rivabellosa": {"numeros_voies": [29], "longueurs_voies": [250], "lat": 42.699047, "lon": -2.917172},
-                "KVO (CPH)": {"numeros_voies": [30,31], "longueurs_voies": [300,280], "lat": 55.662953, "lon": 12.546617},
-                "Elsinore": {"numeros_voies": [32], "longueurs_voies": [270], "lat": 56.030817, "lon": 12.608929},
+                "Glostrup": {"numeros_voies": [7,8,9,11], "longueurs_voies": [290,340,400,300], "lat": 55.662194, "lon": 12.393508, "voies_electrifiees": [7,8,9]},
+                "Naestved": {"numeros_voies": [1], "longueurs_voies": [280], "lat": 55.194538, "lon": 11.822616, "voies_electrifiees": [1]},
+                "Taulov": {"numeros_voies": [21, 35], "longueurs_voies": [280, 280], "lat": 55.546012, "lon": 9.632929, "voies_electrifiees": [21,35]},
+                "KAC": {"numeros_voies": [20,22], "longueurs_voies": [280,280], "lat": 55.624757, "lon": 12.680361, "voies_electrifiees": [20,22]},
+                "Helgoland": {"numeros_voies": [23], "longueurs_voies": [280], "lat": 55.714857, "lon": 12.582771, "voies_electrifiees": [23]},
+                "Padborg": {"numeros_voies": [24], "longueurs_voies": [280], "lat": 54.824899, "lon": 9.357716,"voies_electrifiees": [24]},
+                "Langenfelde": {"numeros_voies": [25], "longueurs_voies": [280], "lat": 53.581551, "lon": 9.924246,"voies_electrifiees": [25]},
+                "LMII": {"numeros_voies": [26,27], "longueurs_voies": [280,300], "lat": 40.537568, "lon": -3.887422, "voies_electrifiees": [26,27]},
+                "Hendaya": {"numeros_voies": [28], "longueurs_voies": [320], "lat": 43.348556, "lon": -1.788629, "voies_electrifiees": [28]},
+                "Rivabellosa": {"numeros_voies": [29], "longueurs_voies": [250], "lat": 42.699047, "lon": -2.917172, "voies_electrifiees": [29]},
+                "KVO (CPH)": {"numeros_voies": [30,31], "longueurs_voies": [300,280], "lat": 55.662953, "lon": 12.546617, "voies_electrifiees": [30,31]},
+                "Elsinore": {"numeros_voies": [32, 34], "longueurs_voies": [270, 270], "lat": 56.030817, "lon": 12.608929, "voies_electrifiees": [32, 34]},
+                "Cerbère": {"numeros_voies": [33], "longueurs_voies": [300], "lat": 42.442547, "lon": 3.158693,"voies_electrifiees": [33]},
             }
         self.depots = {}
         for nom, conf in depots_config.items():
@@ -84,24 +85,29 @@ class Simulation:
                 "occupation": [],
                 "lat": conf.get("lat"),
                 "lon": conf.get("lon"),
+                "voies_electrifiees": conf.get("voies_electrifiees", []),  # <-- nouvelle clé
             }
+        # Initialize trains and safety margin
+        # This will be a list of Train objects
         self.trains = []
         self.delai_securite = 10  # Safety margin in minutes between trains
         self.historique = []
 
-    def ajouter_depot(self, nom, numeros_voies, longueurs_voies):
+    def ajouter_depot(self, nom, numeros_voies, longueurs_voies, voies_electrifiees=None):
         """
         Add a new depot to the simulation.
         - nom: depot name
         - numeros_voies: list of track numbers
         - longueurs_voies: list of track lengths
+        - voies_electrifiees: list of electrified track numbers (optional)
         """
         if nom in self.depots:
             return "Ce dépôt existe déjà."
         self.depots[nom] = {
             "numeros_voies": numeros_voies,
             "longueurs_voies": longueurs_voies,
-            "occupation": []
+            "occupation": [],
+            "voies_electrifiees": voies_electrifiees if voies_electrifiees is not None else [],
         }
 
     def ajouter_train(self, train, depot, optimiser=False, ajouter_a_liste=True):

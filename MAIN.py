@@ -324,36 +324,31 @@ def delete_train(train_id: int):
 
 @app.get("/depots")
 def get_depots():
-    """
-    Get list of all available depots.
-    
-    Returns information about all depots in the system including
-    their track configurations and geographical locations.
-    """
-    return get_depots_list(simulation)
+    # Retourne toutes les infos utiles pour chaque dépôt
+    return [
+        {
+            "depot": nom,
+            "numeros_voies": conf.get("numeros_voies", []),
+            "longueurs_voies": conf.get("longueurs_voies", []),
+            "occupation": conf.get("occupation", []),
+            "lat": conf.get("lat"),
+            "lon": conf.get("lon"),
+            "voies_electrifiees": conf.get("voies_electrifiees", []),
+            "nb_voies": len(conf.get("numeros_voies", [])),     # Total number of tracks
+            "trains": [vars(t) for t in simulation.trains if t.depot == nom],  # Trains assigned to this depot
+        }
+        for nom, conf in simulation.depots.items()
+    ]
 
 @app.get("/depots/{depot_name}")
 def get_depot_info(depot_name: str):
-    """
-    Get detailed information about a specific depot.
-    
-    Returns comprehensive information about a depot including track numbers,
-    track lengths, number of tracks, assigned trains, and geographical coordinates.
-    """
-    if depot_name not in simulation.depots:
+    depot = simulation.depots.get(depot_name)
+    if depot is None:
         raise HTTPException(status_code=404, detail="Depot not found")
-    
-    depot_data = simulation.depots[depot_name]
-    trains_depot = [vars(t) for t in simulation.trains if t.depot == depot_name]
-    
+    # Ajoute le nom du dépôt dans la réponse pour cohérence
     return {
-        "name": depot_name,
-        "numeros_voies": depot_data["numeros_voies"],    # Track numbers
-        "longueurs_voies": depot_data["longueurs_voies"], # Track lengths
-        "nb_voies": len(depot_data["numeros_voies"]),     # Total number of tracks
-        "trains": trains_depot,                           # Trains assigned to this depot
-        "lat": depot_data.get("lat"),                     # Latitude coordinate
-        "lon": depot_data.get("lon")                      # Longitude coordinate
+        "depot": depot_name,
+        **depot
     }
 
 # ===== GANTT CHART AND SCHEDULING ENDPOINTS =====

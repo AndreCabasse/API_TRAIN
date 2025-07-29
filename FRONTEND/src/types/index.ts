@@ -32,6 +32,7 @@ export interface Depot {
   numeros_voies: number[]; // List of track numbers in the depot
   longueurs_voies: number[]; // Lengths of each track (meters)
   occupation: Occupation[]; // Occupation details for each track
+  voies_electrifiees?: number[]; // List of electrified tracks (optional)
 }
 
 // Represents the occupation of a track by a train during a time interval

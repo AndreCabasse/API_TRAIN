@@ -682,7 +682,7 @@ const DepotView: React.FC = () => {
                 <StatCard
                   icon={<TrackIcon fontSize="large" />}
                   label={t('number_of_tracks', language) || "Number of tracks"}
-                  value={depotInfo.nb_voies !== undefined && depotInfo.nb_voies !== null ? depotInfo.nb_voies : <span style={{ opacity: 0.5 }}>?</span>}
+                  value={depotInfo.numeros_voies ? depotInfo.numeros_voies.length : <span style={{ opacity: 0.5 }}>?</span>}
                   color={statCardPalette[0].bg}
                   fgColor={statCardPalette[0].fg}
                 />
@@ -715,6 +715,51 @@ const DepotView: React.FC = () => {
                 <Typography variant="body2" color="textSecondary">
                   {t('depot_name', language) || "Depot"} : <b>{selectedDepot}</b>
                 </Typography>
+                {depotInfo?.voies_electrifiees && (
+                  <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
+                    {t('electrified_tracks', language) || "Electrified tracks"} :{" "}
+                    <b>
+                      {depotInfo.voies_electrifiees.length > 0
+                        ? depotInfo.voies_electrifiees.join(", ")
+                        : t('none', language) || "None"}
+                    </b>
+                  </Typography>
+                )}
+                {depotInfo?.numeros_voies && (
+                  <Box mt={2}>
+                    <Typography variant="subtitle1" color={redPalette.main} gutterBottom>
+                      {t('track_details', language) || "Track details"}
+                    </Typography>
+                    <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse', fontSize: 15 }}>
+                      <thead>
+                        <tr>
+                          <th style={{ borderBottom: '1px solid #ccc', padding: 6 }}>{t('track', language) || "Track"}</th>
+                          <th style={{ borderBottom: '1px solid #ccc', padding: 6 }}>{t('length', language) || "Length"}</th>
+                          <th style={{ borderBottom: '1px solid #ccc', padding: 6 }}>{t('electrified', language) || "Electrified"}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {depotInfo.numeros_voies.map((voie: number, idx: number) => {
+                          // Ajoute ce log ici :
+                          console.log("voies_electrifiees:", depotInfo.voies_electrifiees, "voie:", voie, typeof voie);
+
+                          return (
+                            <tr key={voie}>
+                              <td style={{ padding: 6, borderBottom: '1px solid #eee' }}>{voie}</td>
+                              <td style={{ padding: 6, borderBottom: '1px solid #eee' }}>{depotInfo.longueurs_voies[idx]} m</td>
+                              <td style={{ padding: 6, borderBottom: '1px solid #eee' }}>
+                                {depotInfo.voies_electrifiees &&
+                                depotInfo.voies_electrifiees.map(Number).includes(Number(voie))
+                                  ? "⚡"
+                                  : t('no', language) || "Non"}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </Box>
+                  </Box>
+                )}
               </Box>
             </Grid>
             {/* List of waiting trains */}
