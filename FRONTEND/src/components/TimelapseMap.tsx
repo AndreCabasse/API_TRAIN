@@ -17,7 +17,7 @@ import L from "leaflet";
 import { useLanguage } from "../contexts/LanguageContext";
 import { t } from "../utils/translations";
 
-// Pour calculer la semaine de l'année
+// For calculating the week number of the year
 function getWeekNumber(date: Date) {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
   const dayNum = d.getUTCDay() || 7;
@@ -28,7 +28,7 @@ function getWeekNumber(date: Date) {
   return weekNo;
 }
 
-// Décalage automatique si plusieurs trains au même endroit
+// Automatic offset if multiple trains are at the same location
 function getOffsetForTrain(trainsAtCurrent: any[], train: any) {
   const samePos = trainsAtCurrent.filter(
     t => t.pos.lat === train.pos.lat && t.pos.lon === train.pos.lon
@@ -37,7 +37,7 @@ function getOffsetForTrain(trainsAtCurrent: any[], train: any) {
   return -18 - localIdx * 22;
 }
 
-// Fonction utilitaire pour créer un DivIcon avec le nom du train et un offset vertical
+// Utility function to create a DivIcon with the train name and a vertical offset
 const getTrainNameIcon = (name: string, offsetY = -18) =>
   new L.DivIcon({
     html: `<div style="
@@ -81,7 +81,7 @@ const TimelapseMap: React.FC = () => {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const { language } = useLanguage();
 
-  // Charger les données du backend
+  // Load data from the backend
   useEffect(() => {
     trainApi.getTimelapseData().then((data) => {
       setTimelapseData(data);
@@ -93,7 +93,7 @@ const TimelapseMap: React.FC = () => {
     });
   }, []);
 
-  // Animation automatique
+  // Automatic animation
   const play = () => {
     if (intervalRef.current) return;
     intervalRef.current = setInterval(() => {
@@ -126,7 +126,7 @@ const TimelapseMap: React.FC = () => {
       ]
     : [55.6, 12.4];
 
-  // Calcul de la semaine de l'année
+  // Calculate the week number of the year
   let weekStr = "";
   if (currentTime) {
     const dateObj = new Date(currentTime);
@@ -190,7 +190,7 @@ const TimelapseMap: React.FC = () => {
             minHeight: 540,
           }}
         >
-          {/* Date affichée en gros sur la carte */}
+          {/* Date shown */}
           <Box
             sx={{
               position: "absolute",
@@ -224,7 +224,7 @@ const TimelapseMap: React.FC = () => {
           </Box>
           <MapContainer center={center as [number, number]} zoom={6} style={{ height: 500, width: "100%" }}>
             <TileLayer url="https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png" />
-            {/* Trajet complet en gris pointillé */}
+            {/* full trip */}
             {timelapseData.map((train, idx) => (
               <Polyline
                 key={train.train_id + "_future"}
@@ -234,7 +234,7 @@ const TimelapseMap: React.FC = () => {
                 dashArray="5,10"
               />
             ))}
-            {/* Trajet parcouru en rouge */}
+            {/* trip in red */}
             {timelapseData.map((train, idx) => {
               const pastPositions = train.positions.filter((p: any) => p.debut <= currentTime);
               if (pastPositions.length < 2) return null;
@@ -248,7 +248,7 @@ const TimelapseMap: React.FC = () => {
                 />
               );
             })}
-            {/* Marqueurs trains avec nom et décalage si plusieurs */}
+            {/* Train markers with name and offset if multiple */}
             {trainsAtCurrent.map((train: any, idx: number) => (
               <Marker
                 key={train.train_id}

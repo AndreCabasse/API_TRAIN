@@ -99,24 +99,24 @@ const GameView: React.FC = () => {
   });
   const [coachDirection, setCoachDirection] = useState<'normal' | 'reverse'>('normal');
 
-  // Pour le menu de déplacement de wagon
+  // For the wagon move menu
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [moveMenu, setMoveMenu] = useState<{track: number, idx: number} | null>(null);
 
-  // Pour le drag & drop
+  // For drag & drop
   const [dragged, setDragged] = useState<{track: number, idx: number} | null>(null);
 
-  // Synchroniser trackCount avec localStorage
+  // Set the number of tracks
   const setTrackCount = (n: number) => {
     setTrackCountState(n);
     localStorage.setItem('trackCount', String(n));
   };
 
-  // Charger l'état du jeu depuis l'API au montage
+  // Load initial game state
   useEffect(() => {
     trainApi.getGameState().then((state) => {
       setGameState(state);
-      // Optionnel : setSelectedTrack selon les voies présentes
+      // Optionnel : setSelectedTrack depending on the state of tracks
       const tracks = Object.keys(state);
       if (tracks.length > 0) setSelectedTrack(Number(tracks[0]));
     });
@@ -146,12 +146,12 @@ const GameView: React.FC = () => {
     }
   };
 
-  // Lors du reset, remettre trackCount à 4 et l'enregistrer
+  // When reset button is clicked, reset the game state
   const handleResetGame = async () => {
     try {
       const result = await trainApi.resetGame();
       setGameState(result.state);
-      setTrackCount(4); // <-- reset aussi le nombre de voies
+      setTrackCount(4); // <-- reset also the number of tracks
       showSnackbar(t('game_reset', language), 'success');
     } catch (error: any) {
       showSnackbar(t('reset_error', language), 'error');
@@ -188,17 +188,17 @@ const GameView: React.FC = () => {
     }
   };
 
-  // Ouvre le menu de déplacement
+  // Open the move menu
   const handleOpenMoveMenu = (event: React.MouseEvent<HTMLElement>, track: number, idx: number) => {
     setAnchorEl(event.currentTarget);
     setMoveMenu({ track, idx });
   };
-  // Ferme le menu de déplacement
+  // Close the move menu
   const handleCloseMoveMenu = () => {
     setAnchorEl(null);
     setMoveMenu(null);
   };
-  // Sélectionne la voie de destination
+  // Select the destination track
   const handleSelectMoveTrack = async (toTrack: number) => {
     if (moveMenu) {
       await handleMoveWagonToTrack(moveMenu.track, moveMenu.idx, toTrack);
@@ -231,7 +231,7 @@ const GameView: React.FC = () => {
     }
   };
 
-  // Ajout d'une Coach formation complète avec choix du sens
+  // Add a coach formation to the game
   const handleAddCoachFormation = async () => {
     let formation = [
       { type: 'locomotive' },
@@ -284,7 +284,7 @@ const GameView: React.FC = () => {
     }
   };
 
-  // --- MODIFICATION : Séparation des dimensions carte/image ---
+  // --- MODIFICATION : Divide card dimensions based on element type ---
   const renderTrack = (trackNumber: number, elements: any[]) => {
     return (
       <Card
@@ -331,7 +331,7 @@ const GameView: React.FC = () => {
               <Typography color="textSecondary">{t('empty_track', language)}</Typography>
             ) : (
               elements.map((element, index) => {
-                // Séparation des dimensions carte/image
+                // Divide card dimensions based on element type
                 let cardWidth = 110, cardHeight = 120;
                 let imgWidth = 100, imgHeight = 80;
                 if (element.type === 'locomotive') {

@@ -7,6 +7,8 @@
 // Contact: andre.cabasse.massena@gmail.com
 
 import React, { useState, useEffect } from 'react';
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 import {
   Container,
   Paper,
@@ -202,6 +204,28 @@ const TrainManagement: React.FC = () => {
     setOpenDialog(true);
   };
 
+  const exportTrainsToExcel = () => {
+  // Prepare the data for export
+  const data = trains.map(train => ({
+    "Nom": train.nom,
+    "Wagons": train.wagons,
+    "Locomotives": train.locomotives,
+    "Longueur (m)": train.longueur,
+    "Arrivée": formatDateTime(train.arrivee),
+    "Départ": formatDateTime(train.depart),
+    "Dépôt": train.depot,
+    "Type": train.type,
+    "Électrique": train.electrique ? "Oui" : "Non"
+  }));
+  // Create a new workbook and add the data
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Trains");
+  // Generate the Excel file and trigger download
+  const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+  saveAs(new Blob([wbout], { type: "application/octet-stream" }), "trains.xlsx");
+  };
+
   /**
    * Open the dialog to edit an existing train.
    * Pre-fills the form with the train's data.
@@ -254,7 +278,7 @@ const TrainManagement: React.FC = () => {
       return;
     }
 
-      // Vérification de la disponibilité du train (pas de doublon sur la même période)
+      // Verify that the train does not overlap with existing trains
       const overlap = trains.some(t =>
         t.nom === formData.nom &&
         t.id !== editingTrain?.id &&
@@ -375,7 +399,7 @@ const TrainManagement: React.FC = () => {
     );
   });
 
-  // Filtrage et tri des trains
+  // Filter for trains based on search, depot, and status
   const filteredTrains = trains
     .filter(train =>
       (!search || train.nom.toLowerCase().includes(search.toLowerCase())) &&
@@ -447,6 +471,15 @@ const TrainManagement: React.FC = () => {
                   onChange={handleImportExcel}
                 />
               </Button>
+              
+              <Button
+                  variant="outlined"
+                  color="primary"
+                  onClick={exportTrainsToExcel}
+                  sx={{ fontWeight: "bold", borderColor: redPalette.main, color: redPalette.main }}
+                >
+                  Exporter Excel
+                </Button>
 
               {/* Add new train button */}
               <Button

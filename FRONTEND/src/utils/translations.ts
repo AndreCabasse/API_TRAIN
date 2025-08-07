@@ -38,6 +38,8 @@ export const TRANSLATIONS = {
         "statistics": {"fr": "Statistiques", "en": "Statistics", "da": "Statistikker"},
         "depots": {"fr": "Dépôts", "en": "Depots", "da": "Depoter"},
         "depot": {"fr": "Dépôt", "en": "Depot", "da": "Depot"},
+        "wait_start": {"fr": "Attente avant le début", "en": "Wait before start", "da": "Vent før start"},
+        "wait_end": {"fr": "Attente avant la fin", "en": "Wait before end", "da": "Vent før slut"},
         "language": {"fr": "Langue", "en": "Language", "da": "Sprog"},
         "Time": {"fr": "Temps", "en": "Time", "da": "Tid"},
         "Track": {"fr": "Voie", "en": "Track", "da": "Togbane"},

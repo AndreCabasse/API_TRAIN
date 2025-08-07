@@ -206,7 +206,7 @@ const MapView: React.FC = () => {
     className: 'depot-marker-custom',
   });
 
-  // Décalage pour rendre le marker dépôt toujours visible même avec cluster
+  // Offset the depot marker if clustered
   const DEPOT_MARKER_OFFSET = 0.00018;
 
   return (
@@ -253,7 +253,7 @@ const MapView: React.FC = () => {
                   '&:hover': { background: red[100] },
                   fontSize: 28,
                   ml: 2,
-                  height: 48, // pour bien centrer verticalement
+                  height: 48, // to match the height of the select
                   width: 48
                 }}
                 onClick={() => setShowTimelapse((v) => !v)}
@@ -263,7 +263,7 @@ const MapView: React.FC = () => {
             </Tooltip>
           </Box>
 
-        {/* Affichage conditionnel : timelapse ou carte classique */}
+        {/* Conditional rendering: timelapse or classic map */}
         {showTimelapse ? (
           <TimelapseMap />
         ) : (
@@ -321,7 +321,7 @@ const MapView: React.FC = () => {
                     )}
                     <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
 
-                    {/* Affichage des dépôts */}
+                    {/* Depot markers */}
                     {depots.map((depot) => (
                       <Marker
                         key={depot.depot}
@@ -334,7 +334,7 @@ const MapView: React.FC = () => {
                       </Marker>
                     ))}
 
-                    {/* Affichage des trains */}
+                    {/* Train markers with name and offset if multiple */}
                     {showAll
                       ? allTrains.map((train, idx) => (
                           <Marker
@@ -373,19 +373,19 @@ const MapView: React.FC = () => {
                         ))
                     }
 
-                    {/* Clusters et tooltips */}
+                    {/* Clusters and tooltips */}
                     {showAll ? (
                       <>
                         {depots.map((depot) => {
                           const trains = allTrains.filter(t => t.depotName === depot.depot);
-                          // Décalage du marker dépôt si cluster
+                          // Offset the depot marker if clustered
                           const depotMarkerPos: [number, number] =
                             trains.length > 5
                               ? [depot.lat + DEPOT_MARKER_OFFSET, depot.lon]
                               : [depot.lat, depot.lon];
                           return (
                             <React.Fragment key={`depot-group-${depot.depot}`}>
-                              {/* Dépôt toujours visible */}
+                              {/* Depot always visible, even with cluster */}
                               <Marker
                                 key={`depot-${depot.depot}`}
                                 position={depotMarkerPos}
@@ -395,7 +395,7 @@ const MapView: React.FC = () => {
                                 <Popup>
                                   <b style={{ color: blue[700] }}>{depot.depot}</b>
                                 </Popup>
-                                {/* Badge nombre de trains */}
+                                {/* Number of trains */}
                                 <LeafletTooltip
                                   direction="top"
                                   offset={[0, -38]}
@@ -525,7 +525,7 @@ const MapView: React.FC = () => {
                     ) : (
                       depotInfo && selectedDepotObj && depotInfo.trains && depotInfo.trains.length > 0 && (
                         <>
-                          {/* Dépôt toujours visible, même avec cluster */}
+                          {/* Depot always visible, even with cluster */}
                           <Marker
                             key={`depot-${selectedDepotObj.depot}`}
                             position={
@@ -543,7 +543,7 @@ const MapView: React.FC = () => {
                                 {t('track', language)}s: {depotInfo.numeros_voies?.join(', ')}
                               </span>
                             </Popup>
-                            {/* Badge nombre de trains */}
+                            {/* Number of trains */}
                             <LeafletTooltip
                               direction="top"
                               offset={[0, -38]}
@@ -851,7 +851,7 @@ const MapView: React.FC = () => {
           </Box>
         )}
       </Container>
-      {/* Astuce CSS pour le badge sur le marker dépôt */}
+      {/* Custom styles for the depot train count tooltip */}
       <style>
         {`
         .leaflet-tooltip.depot-train-count-tooltip {
