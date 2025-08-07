@@ -263,7 +263,6 @@ const MapView: React.FC = () => {
             </Tooltip>
           </Box>
 
-
         {/* Affichage conditionnel : timelapse ou carte classique */}
         {showTimelapse ? (
           <TimelapseMap />
@@ -321,7 +320,60 @@ const MapView: React.FC = () => {
                       <FlyToDepot position={selectedPosition} />
                     )}
                     <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
-                    {/* Affichage des dépôts et trains */}
+
+                    {/* Affichage des dépôts */}
+                    {depots.map((depot) => (
+                      <Marker
+                        key={depot.depot}
+                        position={[depot.lat + DEPOT_MARKER_OFFSET, depot.lon]}
+                        icon={depotIcon}
+                      >
+                        <LeafletTooltip direction="top" offset={[0, -18]}>
+                          <b>{depot.depot}</b>
+                        </LeafletTooltip>
+                      </Marker>
+                    ))}
+
+                    {/* Affichage des trains */}
+                    {showAll
+                      ? allTrains.map((train, idx) => (
+                          <Marker
+                            key={train.id || `${train.depotName}_${idx}`}
+                            position={getTrainPosition(train.depotLat, train.depotLon, train.idx, train.total)}
+                            icon={train.electrique ? electricTrainIcon : dieselTrainIcon}
+                          >
+                            <LeafletTooltip direction="top" offset={[0, -10]}>
+                              <>
+                                <b>{train.nom}</b>
+                                <br />
+                                {t('depot', language)}: {train.depotName}
+                              </>
+                            </LeafletTooltip>
+                          </Marker>
+                        ))
+                      : depotInfo && depotInfo.trains && depotInfo.trains.length > 0 &&
+                        depotInfo.trains.map((train: any, idx: number) => (
+                          <Marker
+                            key={train.id || `${selectedDepot}_${idx}`}
+                            position={
+                              selectedDepotObj
+                                ? getTrainPosition(selectedDepotObj.lat, selectedDepotObj.lon, idx, depotInfo.trains.length)
+                                : [0, 0]
+                            }
+                            icon={train.electrique ? electricTrainIcon : dieselTrainIcon}
+                          >
+                            <LeafletTooltip direction="top" offset={[0, -10]}>
+                              <>
+                                <b>{train.nom}</b>
+                                <br />
+                                {t('depot', language)}: {selectedDepot}
+                              </>
+                            </LeafletTooltip>
+                          </Marker>
+                        ))
+                    }
+
+                    {/* Clusters et tooltips */}
                     {showAll ? (
                       <>
                         {depots.map((depot) => {
@@ -488,7 +540,7 @@ const MapView: React.FC = () => {
                               <b style={{ color: blue[700] }}>{selectedDepotObj.depot}</b>
                               <br />
                               <span style={{ color: blue[400] }}>
-                                {t('track', language)}s: {depotInfo.numeros_voies.join(', ')}
+                                {t('track', language)}s: {depotInfo.numeros_voies?.join(', ')}
                               </span>
                             </Popup>
                             {/* Badge nombre de trains */}
@@ -676,17 +728,16 @@ const MapView: React.FC = () => {
                           color="textSecondary"
                           gutterBottom
                         >
-                          {t('track', language)}s: {depotInfo.numeros_voies.join(', ')}
+                          {t('track', language)}s: {depotInfo.numeros_voies?.join(', ')}
                         </Typography>
-
                         <Typography
                           variant="h6"
                           sx={{ mt: 2, mb: 1, color: red[800] }}
                         >
-                          {t('trains', language) || "Trains"} ({depotInfo.trains.length})
+                          {t('trains', language) || "Trains"} ({depotInfo.trains ? depotInfo.trains.length : 0})
                         </Typography>
 
-                        {depotInfo.trains.length > 20 ? (
+                        {depotInfo.trains && depotInfo.trains.length > 20 ? (
                           <Box sx={{ maxHeight: 300, overflowY: 'auto', background: red[50], borderRadius: 2 }}>
                             <List dense>
                               {depotInfo.trains.map((train: any) => (
@@ -727,7 +778,7 @@ const MapView: React.FC = () => {
                               ))}
                             </List>
                           </Box>
-                        ) : depotInfo.trains.length > 0 ? (
+                        ) : depotInfo.trains && depotInfo.trains.length > 0 ? (
                           <TableContainer
                             component={Paper}
                             sx={{ maxHeight: 300, background: red[50] }}

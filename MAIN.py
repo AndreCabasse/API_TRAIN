@@ -174,6 +174,19 @@ def add_train(train: TrainIn):
     attempts to schedule it in the specified depot. Includes comprehensive
     validation for all train parameters and conflict detection.
     """
+    # Vérification d'unicité du train sur la période
+    for t in simulation.trains:
+        if (
+            t.nom == train.nom and
+            (
+                (train.arrivee < t.depart) and
+                (train.depart > t.arrivee)
+            )
+        ):
+            return error_response(
+                "Ce train n'est pas disponible à cette période et ne peut pas être positionné dans un dépôt.",
+                status_code=400
+            )
     # Validate required fields to ensure all necessary data is provided
     required_fields = ["nom", "wagons", "locomotives", "arrivee", "depart", "depot"]
     for field in required_fields:
@@ -343,12 +356,18 @@ def get_depots():
 @app.get("/depots/{depot_name}")
 def get_depot_info(depot_name: str):
     depot = simulation.depots.get(depot_name)
-    if depot is None:
+    if not depot:
         raise HTTPException(status_code=404, detail="Depot not found")
-    # Ajoute le nom du dépôt dans la réponse pour cohérence
+    trains = [vars(t) for t in simulation.trains if t.depot == depot_name]
     return {
-        "depot": depot_name,
-        **depot
+        "name": depot_name,
+        "lat": depot.get("lat"),
+        "lon": depot.get("lon"),
+        "numeros_voies": depot.get("numeros_voies"),
+        "longueurs_voies": depot.get("longueurs_voies"),
+        "voies_electrifiees": depot.get("voies_electrifiees"),
+        "trains": trains,
+        "occupation": depot.get("occupation"),
     }
 
 # ===== GANTT CHART AND SCHEDULING ENDPOINTS =====

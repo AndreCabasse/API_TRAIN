@@ -93,7 +93,7 @@ class Simulation:
         self.delai_securite = 10  # Safety margin in minutes between trains
         self.historique = []
 
-    def ajouter_depot(self, nom, numeros_voies, longueurs_voies, voies_electrifiees=None):
+    def ajouter_depot(self, nom, numeros_voies, longueurs_voies, voies_electrifiees=None, lat=None, lon=None):
         """
         Add a new depot to the simulation.
         - nom: depot name
@@ -107,6 +107,8 @@ class Simulation:
             "numeros_voies": numeros_voies,
             "longueurs_voies": longueurs_voies,
             "occupation": [],
+            "lat": lat,
+            "lon": lon,
             "voies_electrifiees": voies_electrifiees if voies_electrifiees is not None else [],
         }
 

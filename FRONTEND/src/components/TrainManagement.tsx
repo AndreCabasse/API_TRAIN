@@ -253,6 +253,25 @@ const TrainManagement: React.FC = () => {
       showSnackbar(t('departure_after_arrival', language) || 'Departure time must be after arrival', 'error');
       return;
     }
+
+      // Vérification de la disponibilité du train (pas de doublon sur la même période)
+      const overlap = trains.some(t =>
+        t.nom === formData.nom &&
+        t.id !== editingTrain?.id &&
+        (
+          (new Date(formData.arrivee) < new Date(t.depart)) &&
+          (new Date(formData.depart) > new Date(t.arrivee))
+        )
+      );
+      if (overlap) {
+        showSnackbar(
+          t('train_overlap_error', language) ||
+          "Ce train n'est pas disponible à cette période et ne peut pas être positionné dans un dépôt.",
+          'error'
+        );
+        return;
+      }
+
     try {
       if (editingTrain) {
         await trainApi.updateTrain(editingTrain.id, formData);

@@ -326,6 +326,7 @@ export const TRANSLATIONS = {
         "wagon_type_cabcar": {"fr": "Cabcar","en": "Cabcar ","da": "Cabcar"},
         "yes": {"fr": "Oui", "en": "Yes", "da": "Ja"},
         "no": {"fr": "Non", "en": "No", "da": "Nej"},
+        "train_overlap_error": {"fr": "Erreur : Le train {name} chevauche un autre train.","en": "Error: Train {name} overlaps with another train.","da": "Fejl: Toget {name} overlapper med et andet tog."},
         "electrified_tracks": {"fr": "Voies électrifiées","en": "Electrified tracks","da": "Elektrificerede spor"},
         "electrified": {"fr": "Voie électrifiée","en": "Electrified track","da": "Elektrificeret spor"},
         "track_details": {"fr": "Détails des voies","en": "Track details","da": "Spor detaljer"},
