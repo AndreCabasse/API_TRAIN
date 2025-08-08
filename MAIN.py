@@ -93,7 +93,8 @@ app.add_middleware(
         "http://localhost:3001",     # Development frontend server
         "http://localhost:3000",     # Alternative development port
         "https://web-production-76c6f.up.railway.app",  # Production deployment
-        "https://web-production-1e33b.up.railway.app"   # Alternative production deployment
+        "https://web-production-1e33b.up.railway.app",
+        "http://192.168.1.15:3000"  # Alternative production deployment
     ],
     allow_credentials=True,  # Allow cookies and authentication headers
     allow_methods=["*"],     # Allow all HTTP methods (GET, POST, PUT, DELETE, etc.)
