@@ -387,7 +387,9 @@ const TrainManagement: React.FC = () => {
    * Format a date string to a readable local string (Copenhagen time).
    */
   const formatDateTime = (dateString: string) => {
-    return new Date(dateString).toLocaleString('da-DK', { timeZone: 'Europe/Copenhagen' });
+    const d = new Date(dateString);
+    const pad = (n: number) => n.toString().padStart(2, "0");
+    return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
   };
 
   // Debug: log train arrival dates for troubleshooting

@@ -1,0 +1,15 @@
+{
+  "short_name": "TrainDepot",
+  "name": "Train Depot Simulation",
+  "icons": [
+    {
+      "src": "Train.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#D32F2F",
+  "background_color": "#FFF5F5"
+}

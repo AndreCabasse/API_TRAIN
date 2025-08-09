@@ -94,7 +94,8 @@ app.add_middleware(
         "http://localhost:3000",     # Alternative development port
         "https://web-production-76c6f.up.railway.app",  # Production deployment
         "https://web-production-1e33b.up.railway.app",
-        "http://192.168.1.15:3000"  # Alternative production deployment
+        "http://192.168.1.15:3000",  # <-- Ajoute ici l'IP de la machine qui héberge le frontend
+        "http://192.168.1.XX:3000",  # <-- Ajoute aussi l'IP de la machine cliente si besoin
     ],
     allow_credentials=True,  # Allow cookies and authentication headers
     allow_methods=["*"],     # Allow all HTTP methods (GET, POST, PUT, DELETE, etc.)
@@ -763,19 +764,20 @@ def reset_game():
 @app.post("/import-trains-excel")
 async def import_trains_excel(file: UploadFile = File(...)):
     """
-    Import trains from an Excel or CSV file.
+    Import trains from an Excel or CSV file (multi-language support).
     
     Accepts Excel (.xlsx, .xls) or CSV files containing train data
     and imports them into the simulation. Handles data validation,
     format conversion, and error reporting for each imported train.
+    Supports column headers in French, English, or Danish.
     """
     print("File received:", file.filename)  # Debug log
     global train_id_counter
-    
+
     # Validate file format
     if not file.filename.endswith(('.xlsx', '.xls', '.csv')):
         raise HTTPException(status_code=400, detail="Unsupported file format")
-    
+
     # Read file content based on format
     try:
         if file.filename.endswith('.csv'):
@@ -785,50 +787,82 @@ async def import_trains_excel(file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"File reading error: {e}")
 
-    # Column mapping from French to English internal names
-    col_map = {
-        "Nom": "nom",                           # Train name
-        "Nombre de wagons": "wagons",           # Number of wagons
-        "Nombre de locomotives": "locomotives", # Number of locomotives
-        "Heure d'arrivée": "arrivee",          # Arrival time
-        "Heure de départ": "depart",           # Departure time
-        "Dépôt": "depot",                      # Depot name
-        "Type de train": "type",               # Train type
-        "Électrique": "electrique",            # Electric train flag
-        "Côté sans locomotive": "locomotive_cote"  # Side without locomotive
+    # Multi-language column mapping
+    COLUMN_MAP = {
+        "nom": [
+            "Nom", "Name", "Navn", "Train name", "Train navn"
+        ],
+        "wagons": [
+            "Wagons", "Nombre de wagons", "Number of wagons", "Antal vogne"
+        ],
+        "locomotives": [
+            "Locomotives", "Nombre de locomotives", "Number of locomotives", "Antal lokomotiver"
+        ],
+        "arrivee": [
+            "Arrivée", "Heure d'arrivée", "Arrival", "Arrival time", "Ankomsttid", "Ankomst"
+        ],
+        "depart": [
+            "Départ", "Heure de départ", "Departure", "Departure time", "Afgangstid", "Afgang"
+        ],
+        "depot": [
+            "Dépôt", "Depot"
+        ],
+        "type": [
+            "Type", "Type de train", "Train type", "Togtype"
+        ],
+        "electrique": [
+            "Électrique", "Electric", "Elektrisk"
+        ],
+        "locomotive_cote": [
+            "Côté sans locomotive", "Locomotive side", "Lokomotivens side"
+        ]
     }
-    df = df.rename(columns=col_map)
+
+    # Normalize columns to internal names
+    def normalize_columns(df):
+        col_map = {}
+        for key, aliases in COLUMN_MAP.items():
+            for alias in aliases:
+                for col in df.columns:
+                    if col.strip().lower() == alias.strip().lower():
+                        col_map[col] = key
+        return df.rename(columns=col_map)
+
+    df = normalize_columns(df)
 
     # Data cleaning and conversion
     imported = []  # Successfully imported trains
     errors = []    # Import errors
-    
+
     for idx, row in df.iterrows():
         try:
             # Date conversion with proper timezone handling
             arrivee = pd.to_datetime(row['arrivee'], dayfirst=True)
             depart = pd.to_datetime(row['depart'], dayfirst=True)
-            
+
             # Add Europe/Copenhagen timezone
             cph = ZoneInfo("Europe/Copenhagen")
             if arrivee.tzinfo is None:
                 arrivee = arrivee.tz_localize(cph)
             if depart.tzinfo is None:
                 depart = depart.tz_localize(cph)
-            
+
             # Convert to Python datetime objects
             arrivee = arrivee.to_pydatetime()
             depart = depart.to_pydatetime()
-            
-            # Boolean conversion for electric flag
-            electrique = str(row.get('electrique', '')).strip().upper() == "TRUE"
-            
+
+            # Boolean conversion for electric flag (accepts Oui/Yes/Ja/True/1)
+            electrique_val = str(row.get('electrique', '')).strip().lower()
+            electrique = electrique_val in ["oui", "yes", "ja", "true", "1"]
+
             # Locomotive side configuration
             loco_cote = row.get('locomotive_cote') or "left"
-            
+            if str(loco_cote).lower() not in ("left", "right"):
+                loco_cote = "left"
+
             # Train type normalization
             train_type = str(row.get('type', 'storage')).lower()
-            
+
             # Create train object with validated data
             t_obj = Train(
                 id=train_id_counter,
@@ -840,9 +874,9 @@ async def import_trains_excel(file: UploadFile = File(...)):
                 depot=row['depot'],
                 type=train_type,
                 electrique=electrique,
-                locomotive_cote=loco_cote if loco_cote in ("left", "right") else "left"
+                locomotive_cote=loco_cote
             )
-            
+
             # Add train to simulation and handle potential conflicts
             train_id_counter += 1
             erreur = simulation.ajouter_train(t_obj, t_obj.depot)
@@ -850,7 +884,7 @@ async def import_trains_excel(file: UploadFile = File(...)):
                 errors.append(f"Line {idx+2} ({row['nom']}): {erreur}")
             else:
                 imported.append(row['nom'])
-                
+
         except Exception as e:
             errors.append(f"Line {idx+2}: {e}")
 
