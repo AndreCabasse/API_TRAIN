@@ -168,8 +168,8 @@ const TrainManagement: React.FC = () => {
   const loadDepots = async () => {
     try {
       const data = await trainApi.getDepots();
-      setDepots(data);
-      if (!formData.depot && data.length > 0) {
+      setDepots(Array.isArray(data) ? data : []);
+      if (!formData.depot && Array.isArray(data) && data.length > 0) {
         setFormData((prev) => ({ ...prev, depot: data[0].depot }));
       }
     } catch (error) {
@@ -256,7 +256,7 @@ const TrainManagement: React.FC = () => {
       try {
         await trainApi.deleteTrain(trainId);
         const updatedTrains = await trainApi.getTrains();
-        setTrains(updatedTrains);
+        setTrains(Array.isArray(updatedTrains) ? updatedTrains : []);
         //await saveCurrentSimulation(updatedTrains);
         showSnackbar(`${t('train_deleted', language) || 'Train deleted'} "${trainName}"`, 'success');
       } catch (error) {
