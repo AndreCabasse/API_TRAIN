@@ -594,7 +594,7 @@ const GameView: React.FC = () => {
               {t('track_state', language)}
             </Typography>
             <Box sx={{ width: '100%', minWidth: 0 }}>
-              {Object.entries(gameState)
+              {Object.entries(gameState && typeof gameState === 'object' ? gameState : {})
                 .slice(0, trackCount)
                 .map(([trackNumber, elements]: [string, any]) =>
                   renderTrack(parseInt(trackNumber), elements)
