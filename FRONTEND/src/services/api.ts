@@ -29,7 +29,7 @@ export const trainApi = {
    */
   getTrains: async (): Promise<Train[]> => {
     const response = await api.get('/trains');
-    return response.data;
+    return Array.isArray(response.data) ? response.data : [];
   },
 
   /**

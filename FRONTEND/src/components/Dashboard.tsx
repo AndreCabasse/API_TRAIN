@@ -105,9 +105,8 @@ const Dashboard: React.FC = () => {
   }
 
   // Filter trains by waiting/placed status
-  const waitingTrains = trains.filter(train => train.en_attente);
-  const placedTrains = trains.filter(train => !train.en_attente);
-
+  const waitingTrains = Array.isArray(trains) ? trains.filter(train => train.en_attente) : [];
+  const placedTrains = Array.isArray(trains) ? trains.filter(train => !train.en_attente) : [];
   return (
     <>
       <Container
