@@ -205,8 +205,9 @@ const TrainManagement: React.FC = () => {
   };
 
   const exportTrainsToExcel = () => {
-  // Prepare the data for export
-  const data = trains.map(train => ({
+  // Sécurise trains pour éviter l'erreur .map
+  const safeTrains = Array.isArray(trains) ? trains : [];
+  const data = safeTrains.map(train => ({
     "Nom": train.nom,
     "Wagons": train.wagons,
     "Locomotives": train.locomotives,
