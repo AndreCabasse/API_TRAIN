@@ -84,8 +84,6 @@ const getElementImage = (element: any) => {
   }
 };
 
-const TRACK_NUMBERS = [7, 8, 9, 11, 12, 13, 14];
-
 const GameView: React.FC = () => {
   const { language } = useLanguage();
   const [gameState, setGameState] = useState<any>({});
@@ -117,8 +115,8 @@ const GameView: React.FC = () => {
     trainApi.getGameState().then((state) => {
       setGameState(state);
       // Optionnel : setSelectedTrack depending on the state of tracks
-      const tracks = Object.keys(state);
-      if (tracks.length > 0) setSelectedTrack(Number(tracks[0]));
+      const trackNumbers = Object.keys(gameState).map(Number); // <-- dynamique
+      if (trackNumbers.length > 0) setSelectedTrack(trackNumbers[0]);
     });
   }, [trackCount]); 
 
@@ -515,10 +513,14 @@ const GameView: React.FC = () => {
         open={Boolean(anchorEl)}
         onClose={handleCloseMoveMenu}
       >
-        {moveMenu && TRACK_NUMBERS.slice(0, trackCount).filter(num => num !== moveMenu.track).map(num => (
-          <MenuItem key={num} onClick={() => handleSelectMoveTrack(num)}>
-            {t('track', language)} {num}
-          </MenuItem>
+        {moveMenu && Object.keys(gameState)
+          .map(Number)
+          .slice(0, trackCount)
+          .filter(num => num !== moveMenu.track)
+          .map(num => (
+            <MenuItem key={num} onClick={() => handleSelectMoveTrack(num)}>
+              {t('track', language)} {num}
+            </MenuItem>
         ))}
       </Menu>
 
@@ -632,12 +634,14 @@ const GameView: React.FC = () => {
                     onChange={(e) => setSelectedTrack(Number(e.target.value))}
                     sx={{ bgcolor: "#fff", borderRadius: 2 }}
                   >
-                    {TRACK_NUMBERS.slice(0, trackCount).map((trackNum) => (
-                      <MenuItem key={trackNum} value={trackNum}>
-                        {trackNum}{trackNum === 9 && " ⚡"}
-                      </MenuItem>
-                    ))}
-                  </Select>
+                    {Object.keys(gameState)
+                      .slice(0, trackCount)
+                      .map((trackNum) => (
+                        <MenuItem key={trackNum} value={Number(trackNum)}>
+                          {trackNum}{Number(trackNum) === 9 && " ⚡"}
+                        </MenuItem>
+                      ))}
+</Select>
                 </FormControl>
 
                 {/* Add wagon controls */}

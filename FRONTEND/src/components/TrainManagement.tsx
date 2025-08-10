@@ -338,21 +338,23 @@ const TrainManagement: React.FC = () => {
       const formData = new FormData();
       formData.append('file', e.target.files[0]);
       try {
-        const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
-        const res = await fetch(`${apiUrl}/import-trains-excel`, {
-          method: 'POST',
+        setLoading(true);
+        const res = await fetch(`${process.env.REACT_APP_API_URL}/import-trains-excel`, {
+          method: "POST",
           body: formData,
+          credentials: "include", // si besoin d’auth, sinon tu peux l’enlever
         });
         const data = await res.json();
-        if (data.imported?.length) {
-          showSnackbar(`${t('import_success', language) || 'Import success'}: ${data.imported.join(', ')}`, 'success');
-        }
-        if (data.errors?.length) {
-          showSnackbar(`${t('import_error', language) || 'Import error'}: ${data.errors.join('\n')}`, 'error');
+        if (data.errors && data.errors.length > 0) {
+          showSnackbar("Erreur(s) import : " + data.errors.join("\n"), "error");
+        } else {
+          showSnackbar("Import réussi !", "success");
         }
         await loadTrains();
       } catch (err) {
-        showSnackbar(t('import_error', language) || 'Import error', 'error');
+        showSnackbar("Erreur lors de l'import", "error");
+      } finally {
+        setLoading(false);
       }
     }
   };
