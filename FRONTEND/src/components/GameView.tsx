@@ -328,10 +328,10 @@ const GameView: React.FC = () => {
             onDragOver={handleDragOver}
             onDrop={() => handleDrop(trackNumber)}
           >
-            {elements.length === 0 ? (
+            {safeElements.length === 0 ? (
               <Typography color="textSecondary">{t('empty_track', language)}</Typography>
             ) : (
-              elements.map((element, index) => {
+              safeElements.map((element, index) => {
                 // Divide card dimensions based on element type
                 let cardWidth = 110, cardHeight = 120;
                 let imgWidth = 100, imgHeight = 80;
@@ -500,7 +500,7 @@ const GameView: React.FC = () => {
             )}
           </Box>
           <Typography variant="caption" color="textSecondary" sx={{ mt: 1 }}>
-            {t('length', language)}: {elements.reduce((sum, e) => sum + (e.type === 'locomotive' ? 19 : 14), 0)}m / 300m
+            {t('length', language)}: {safeElements.reduce((sum, e) => sum + (e.type === 'locomotive' ? 19 : 14), 0)}m / 300m
           </Typography>
         </CardContent>
       </Card>
