@@ -114,8 +114,10 @@ const GameView: React.FC = () => {
   useEffect(() => {
     trainApi.getGameState().then((state) => {
       setGameState(state);
-      const trackNumbers = Object.keys(state).map(Number); // Utilise 'state' ici, pas 'gameState'
-      if (trackNumbers.length > 0) setSelectedTrack(trackNumbers[0]);
+      if (state && typeof state === 'object') {
+        const trackNumbers = Object.keys(state).map(Number);
+        if (trackNumbers.length > 0) setSelectedTrack(trackNumbers[0]);
+      }
     });
   }, [trackCount]);
 
