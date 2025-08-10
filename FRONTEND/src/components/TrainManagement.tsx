@@ -153,7 +153,7 @@ const TrainManagement: React.FC = () => {
     try {
       setLoading(true);
       const data = await trainApi.getTrains();
-      setTrains(data);
+      setTrains(Array.isArray(data) ? data : []);
     } catch (error) {
       showSnackbar(t('load_trains_error', language) || 'Error loading trains', 'error');
     } finally {
@@ -403,19 +403,21 @@ const TrainManagement: React.FC = () => {
   });
 
   // Filter for trains based on search, depot, and status
-  const filteredTrains = trains
-    .filter(train =>
-      (!search || train.nom.toLowerCase().includes(search.toLowerCase())) &&
-      (!depotFilter || train.depot === depotFilter) &&
-      (!statusFilter ||
-        (statusFilter === 'waiting' && train.en_attente) ||
-        (statusFilter === 'placed' && !train.en_attente))
-    )
-    .sort((a, b) => {
-      const dateA = new Date(a[sortField]).getTime();
-      const dateB = new Date(b[sortField]).getTime();
-      return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
-    });
+  const filteredTrains = Array.isArray(trains)
+    ? trains
+        .filter(train =>
+          (!search || train.nom.toLowerCase().includes(search.toLowerCase())) &&
+          (!depotFilter || train.depot === depotFilter) &&
+          (!statusFilter ||
+            (statusFilter === 'waiting' && train.en_attente) ||
+            (statusFilter === 'placed' && !train.en_attente))
+        )
+        .sort((a, b) => {
+          const dateA = new Date(a[sortField]).getTime();
+          const dateB = new Date(b[sortField]).getTime();
+          return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+        })
+    : [];
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={getDateLocale()}>

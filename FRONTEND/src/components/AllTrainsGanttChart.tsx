@@ -68,7 +68,7 @@ interface AllTrainsGanttChartProps {
   language: string;
   getWeekLinesAndAnnotations?: (startDate: string, endDate: string) => { shapes: Partial<Shape>[]; annotations: any[] };
   data?: GanttTrain[];
-  optimized?: boolean; // <-- Ajoute ceci
+  optimized?: boolean;
 }
 
 /**
@@ -90,20 +90,26 @@ const AllTrainsGanttChart = ({
 
   useEffect(() => {
     if (!propsData) {
-      trainApi.getAllTrainsGantt().then(setInternalData);
+      trainApi.getAllTrainsGantt().then((res) => {
+        // Sécurise pour toujours avoir un tableau
+        setInternalData(Array.isArray(res) ? res : []);
+      });
     }
   }, [propsData]);
 
+  // Sécurise data pour toujours avoir un tableau
+  const safeData = Array.isArray(data) ? data : [];
+
   // Map to ensure each depot appears only once in the legend
   const depotFirstIndex = new Map<string, number>();
-  data.forEach((d, i) => {
+  safeData.forEach((d, i) => {
     if (!depotFirstIndex.has(d.depot)) {
       depotFirstIndex.set(d.depot, i);
     }
   });
 
   // Zebra effect: alternate background for each train row
-  const yCategories = Array.from(new Set(data.map(d => d.train_nom)));
+  const yCategories = Array.from(new Set(safeData.map(d => d.train_nom)));
   const zebraShapes = yCategories.map((train, idx) => ({
     type: "rect" as const,
     xref: "paper" as const,
@@ -122,7 +128,7 @@ const AllTrainsGanttChart = ({
   const barWidth = yCategories.length > 25 ? 12 : 22;
 
   // Prepare Plotly data traces for each train
-  const plotData = data.map((d, i) => ({
+  const plotData = safeData.map((d, i) => ({
     x: [d.debut, d.fin],
     y: [d.train_nom, d.train_nom],
     mode: "lines",
@@ -144,8 +150,8 @@ const AllTrainsGanttChart = ({
   }));
 
   // Compute the minimum and maximum dates for the displayed period
-  const minDate = data.length ? data.reduce((min, d) => d.debut < min ? d.debut : min, data[0].debut) : "";
-  const maxDate = data.length ? data.reduce((max, d) => d.fin > max ? d.fin : max, data[0].fin) : "";
+  const minDate = safeData.length ? safeData.reduce((min, d) => d.debut < min ? d.debut : min, safeData[0].debut) : "";
+  const maxDate = safeData.length ? safeData.reduce((max, d) => d.fin > max ? d.fin : max, safeData[0].fin) : "";
 
   // Generate week lines and annotations if the function is provided
   const weekShapesAndAnnotations = getWeekLinesAndAnnotations && minDate && maxDate

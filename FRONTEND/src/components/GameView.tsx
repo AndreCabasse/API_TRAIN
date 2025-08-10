@@ -286,6 +286,7 @@ const GameView: React.FC = () => {
 
   // --- MODIFICATION : Divide card dimensions based on element type ---
   const renderTrack = (trackNumber: number, elements: any[]) => {
+    const safeElements = Array.isArray(elements) ? elements : [];
     return (
       <Card
         sx={{
