@@ -175,7 +175,7 @@ const MapView: React.FC = () => {
       </Box>
     );
   }
-  if (!depots.length) return <div>No geolocated depot found</div>;
+  if (!Array.isArray(depots) || depots.length === 0) return <div>No geolocated depot found</div>;
 
   const center = [
     depots.reduce((sum, d) => sum + d.lat, 0) / depots.length,

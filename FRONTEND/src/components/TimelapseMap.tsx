@@ -85,8 +85,8 @@ const TimelapseMap: React.FC = () => {
   useEffect(() => {
     trainApi.getTimelapseData().then((data) => {
       setTimelapseData(data);
-      const allTimes = data.flatMap(train =>
-        train.positions.flatMap((p: any) => [p.debut, p.fin])
+      const allTimes = (Array.isArray(data) ? data : []).flatMap(train =>
+        Array.isArray(train.positions) ? train.positions.flatMap((p: any) => [p.debut, p.fin]) : []
       );
       const uniqueTimes = Array.from(new Set(allTimes)).sort();
       setTimePoints(uniqueTimes);
@@ -118,7 +118,9 @@ const TimelapseMap: React.FC = () => {
     return pos ? { ...train, pos } : null;
   }).filter(Boolean);
 
-  const allDepots = timelapseData.flatMap(t => t.positions.map((p: any) => [p.lat, p.lon]));
+  const allDepots = (Array.isArray(timelapseData) ? timelapseData : []).flatMap(t =>
+  Array.isArray(t.positions) ? t.positions.map((p: any) => [p.lat, p.lon]) : []
+  );
   const center = allDepots.length
     ? [
         allDepots.reduce((sum, [lat]) => sum + lat, 0) / allDepots.length,
@@ -225,18 +227,21 @@ const TimelapseMap: React.FC = () => {
           <MapContainer center={center as [number, number]} zoom={6} style={{ height: 500, width: "100%" }}>
             <TileLayer url="https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png" />
             {/* full trip */}
-            {timelapseData.map((train, idx) => (
+            {(Array.isArray(timelapseData) ? timelapseData : []).map((train, idx) => (
               <Polyline
                 key={train.train_id + "_future"}
-                positions={train.positions.map((p: any) => [p.lat, p.lon])}
+                positions={(Array.isArray(train.positions) ? train.positions : []).map((p: any) => [p.lat, p.lon])}
                 color="#bbb"
                 opacity={0.3}
                 dashArray="5,10"
               />
             ))}
             {/* trip in red */}
-            {timelapseData.map((train, idx) => {
-              const pastPositions = train.positions.filter((p: any) => p.debut <= currentTime);
+            {(Array.isArray(timelapseData) ? timelapseData : []).map((train, idx) => {
+
+              const pastPositions = Array.isArray(train.positions)
+                ? train.positions.filter((p: any) => p.debut <= currentTime)
+                : [];
               if (pastPositions.length < 2) return null;
               return (
                 <Polyline
@@ -249,7 +254,7 @@ const TimelapseMap: React.FC = () => {
               );
             })}
             {/* Train markers with name and offset if multiple */}
-            {trainsAtCurrent.map((train: any, idx: number) => (
+            {(Array.isArray(trainsAtCurrent) ? trainsAtCurrent : []).map((train: any, idx: number) => (
               <Marker
                 key={train.train_id}
                 position={[train.pos.lat, train.pos.lon]}

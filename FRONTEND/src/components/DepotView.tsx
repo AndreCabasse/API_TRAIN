@@ -725,7 +725,8 @@ const DepotView: React.FC = () => {
                     </b>
                   </Typography>
                 )}
-                {depotInfo?.numeros_voies && (
+                {Array.isArray(depotInfo.numeros_voies) && depotInfo.numeros_voies.length > 0 && (
+
                   <Box mt={2}>
                     <Typography variant="subtitle1" color={redPalette.main} gutterBottom>
                       {t('track_details', language) || "Track details"}

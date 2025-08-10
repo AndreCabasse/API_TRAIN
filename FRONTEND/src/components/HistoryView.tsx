@@ -39,20 +39,23 @@ const SimulationSaves: React.FC<{ onLoadSimulation?: () => void }> = ({ onLoadSi
   const { language } = useLanguage();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      setNotConnected(true);
+  const token = localStorage.getItem("token");
+  if (!token) {
+    setNotConnected(true);
+    setSimulations([]);
+    return;
+  }
+  setNotConnected(false);
+  setError(null);
+  userApi.getMySimulations()
+    .then((data: any) => {
+      // Ensure data is always an array
+      setSimulations(Array.isArray(data) ? data : []);
+    })
+    .catch((e: any) => {
       setSimulations([]);
-      return;
-    }
-    setNotConnected(false);
-    setError(null);
-    userApi.getMySimulations()
-      .then(setSimulations)
-      .catch((e: any) => {
-        setSimulations([]);
-        setError(e?.response?.data?.detail || t("error_loading_saves", language));
-      });
+      setError(e?.response?.data?.detail || t("error_loading_saves", language));
+    });
   }, [language]);
 
   const handleSaveSimulation = async () => {
@@ -65,8 +68,9 @@ const SimulationSaves: React.FC<{ onLoadSimulation?: () => void }> = ({ onLoadSi
       const trains = await trainApi.getTrains();
       const data = { trains, date: new Date().toISOString() };
       await userApi.saveSimulation({ name: saveName.trim(), data });
-      setSaveName("");
-      userApi.getMySimulations().then(setSimulations);
+  setSaveName("");
+  userApi.getMySimulations().then((data: any) => setSimulations(Array.isArray(data) ? data : []));
+
     } catch (e: any) {
       setError(e?.response?.data?.detail || t("error_saving_simulation", language));
     }
@@ -76,7 +80,7 @@ const SimulationSaves: React.FC<{ onLoadSimulation?: () => void }> = ({ onLoadSi
     setError(null);
     try {
       await userApi.deleteSimulation(id);
-      userApi.getMySimulations().then(setSimulations);
+      userApi.getMySimulations().then((data: any) => setSimulations(Array.isArray(data) ? data : []));
     } catch (e: any) {
       setError(e?.response?.data?.detail || t("error_deleting_save", language));
     }

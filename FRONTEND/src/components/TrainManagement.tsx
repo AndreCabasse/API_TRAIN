@@ -545,7 +545,7 @@ const TrainManagement: React.FC = () => {
                 MenuProps={{ PaperProps: { sx: { maxWidth: 300 } } }}
               >
                 <MenuItem value="">{t('all_depots', language)}</MenuItem>
-                {depots.map(d => (
+                {(Array.isArray(depots) ? depots : []).map(d => (
                   <MenuItem key={d.depot} value={d.depot}>{d.depot}</MenuItem>
                 ))}
               </Select>
@@ -775,7 +775,7 @@ const TrainManagement: React.FC = () => {
                       onChange={(e) => setFormData({ ...formData, depot: e.target.value })}
                       sx={{ bgcolor: "#fff" }}
                     >
-                      {depots.map((d) => (
+                      {(Array.isArray(depots) ? depots : []).map((d) => (
                         <MenuItem key={d.depot} value={d.depot}>{d.depot}</MenuItem>
                       ))}
                     </Select>

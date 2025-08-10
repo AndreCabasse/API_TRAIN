@@ -72,7 +72,7 @@ const RequirementsByDayTable: React.FC<{ data: any[]; language: string }> = ({ d
         </TableRow>
       </TableHead>
       <TableBody>
-        {data.map((row) => (
+        {(Array.isArray(data) ? data : []).map((row) => (
           <TableRow key={row.date}>
             <TableCell>{row.date}</TableCell>
             <TableCell>
@@ -267,7 +267,7 @@ const StatisticsView: React.FC = () => {
             </LineChart>
           </ResponsiveContainer>
           {/* Table with daily requirements details */}
-          <RequirementsByDayTable data={requirementsByDay} language={language} />
+          <RequirementsByDayTable data={Array.isArray(requirementsByDay) ? requirementsByDay : []} language={language} />
         </Box>
         {/* ----------- End Requirements By Day Block ----------- */}
 
