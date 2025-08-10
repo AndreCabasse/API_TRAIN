@@ -114,11 +114,10 @@ const GameView: React.FC = () => {
   useEffect(() => {
     trainApi.getGameState().then((state) => {
       setGameState(state);
-      // Optionnel : setSelectedTrack depending on the state of tracks
-      const trackNumbers = Object.keys(gameState).map(Number); // <-- dynamique
+      const trackNumbers = Object.keys(state).map(Number); // Utilise 'state' ici, pas 'gameState'
       if (trackNumbers.length > 0) setSelectedTrack(trackNumbers[0]);
     });
-  }, [trackCount]); 
+  }, [trackCount]);
 
   const showSnackbar = (message: string, severity: 'success' | 'error') => {
     setSnackbar({ open: true, message, severity });
