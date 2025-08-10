@@ -322,7 +322,7 @@ const MapView: React.FC = () => {
                     <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
 
                     {/* Depot markers */}
-                    {depots.map((depot) => (
+                    {(Array.isArray(depots) ? depots : []).map((depot) => (
                       <Marker
                         key={depot.depot}
                         position={[depot.lat + DEPOT_MARKER_OFFSET, depot.lon]}
@@ -336,7 +336,8 @@ const MapView: React.FC = () => {
 
                     {/* Train markers with name and offset if multiple */}
                     {showAll
-                      ? allTrains.map((train, idx) => (
+                      ? (Array.isArray(allTrains) ? allTrains : []).map((train, idx) => (
+
                           <Marker
                             key={train.id || `${train.depotName}_${idx}`}
                             position={getTrainPosition(train.depotLat, train.depotLon, train.idx, train.total)}
@@ -352,7 +353,7 @@ const MapView: React.FC = () => {
                           </Marker>
                         ))
                       : depotInfo && depotInfo.trains && depotInfo.trains.length > 0 &&
-                        depotInfo.trains.map((train: any, idx: number) => (
+                        (Array.isArray(depotInfo.trains) ? depotInfo.trains : []).map((train: any, idx: number) => (
                           <Marker
                             key={train.id || `${selectedDepot}_${idx}`}
                             position={
@@ -480,7 +481,7 @@ const MapView: React.FC = () => {
                                 </Marker>
                               )}
                               {trains.length <= 5 &&
-                                trains.map((train: any, idx: number) => {
+                                (Array.isArray(trains) ? trains : []).map((train: any, idx: number) => {
                                   const position: [number, number] =
                                     train.lat && train.lon
                                       ? [train.lat, train.lon]
@@ -585,7 +586,7 @@ const MapView: React.FC = () => {
                                   </Typography>
                                   <Box sx={{ maxHeight: 250, overflowY: 'auto' }}>
                                     <List dense>
-                                      {depotInfo.trains.map((train: any) => (
+                                      {(Array.isArray(depotInfo.trains) ? depotInfo.trains : []).map((train: any, idx: number) => (
                                         <ListItem key={train.id} sx={{ p: 0.5 }}>
                                           <ListItemText
                                             primary={
@@ -630,7 +631,7 @@ const MapView: React.FC = () => {
                               </Marker>
                             </>
                           ) : (
-                            depotInfo.trains.map((train: any, idx: number) => {
+                            (Array.isArray(depotInfo.trains) ? depotInfo.trains : []).map((train: any, idx: number) => {
                               const position: [number, number] =
                                 train.lat && train.lon
                                   ? [train.lat, train.lon]
