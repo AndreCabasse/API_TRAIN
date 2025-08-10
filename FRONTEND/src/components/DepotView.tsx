@@ -605,7 +605,7 @@ const DepotView: React.FC = () => {
                 borderRadius: 2,
               }}
             >
-              {depots.map((d) => (
+              {(Array.isArray(depots) ? depots : []).map((d) => (
                 <MenuItem key={d.depot} value={d.depot}>{d.depot}</MenuItem>
               ))}
             </Select>
@@ -749,7 +749,7 @@ const DepotView: React.FC = () => {
                               <td style={{ padding: 6, borderBottom: '1px solid #eee' }}>{voie}</td>
                               <td style={{ padding: 6, borderBottom: '1px solid #eee' }}>{depotInfo.longueurs_voies[idx]} m</td>
                               <td style={{ padding: 6, borderBottom: '1px solid #eee' }}>
-                                {depotInfo.voies_electrifiees &&
+                                {Array.isArray(depotInfo.voies_electrifiees) &&
                                 depotInfo.voies_electrifiees.map(Number).includes(Number(voie))
                                   ? "⚡"
                                   : t('no', language) || "Non"}

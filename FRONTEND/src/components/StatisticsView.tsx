@@ -215,11 +215,13 @@ const StatisticsView: React.FC = () => {
     : [];
 
   // Requirements by day for line chart
-  const requirementsChartData = requirementsByDay.map(row => ({
-    date: row.date,
-    test_drivers: row.test_drivers,
-    locomotives: row.locomotives
-  }));
+  const requirementsChartData = Array.isArray(requirementsByDay)
+    ? requirementsByDay.map(row => ({
+        date: row.date,
+        test_drivers: row.test_drivers,
+        locomotives: row.locomotives
+      }))
+    : [];
 
   // Show loading spinner while fetching data
   if (loading) {
